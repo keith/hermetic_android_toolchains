@@ -7,3 +7,10 @@ common --android_platforms=@rules_android//:x86_64
 
 common --repo_env=ACCEPTED_ANDROID_SDK_LICENSE_VERSION=35
 common --repo_env=ACCEPTED_ANDROID_NDK_LICENSE_VERSION=r25c
+
+# --remote_header=x-buildbuddy-api-key=<BUILDBUDDY_API_KEY secret>.
+build:buildbuddy --bes_results_url=https://app.buildbuddy.io/invocation/
+build:buildbuddy --bes_backend=grpcs://remote.buildbuddy.io
+build:buildbuddy --remote_cache=grpcs://remote.buildbuddy.io
+build:buildbuddy --remote_timeout=3600
+build:buildbuddy --build_metadata=ROLE=CI
