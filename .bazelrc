@@ -20,5 +20,9 @@ common --incompatible_enable_proto_toolchain_resolution
 build:buildbuddy --bes_results_url=https://app.buildbuddy.io/invocation/
 build:buildbuddy --bes_backend=grpcs://remote.buildbuddy.io
 build:buildbuddy --remote_cache=grpcs://remote.buildbuddy.io
+build:buildbuddy --remote_cache_compression
 build:buildbuddy --remote_timeout=3600
-build:buildbuddy --build_metadata=ROLE=CI
+
+build:buildbuddy-ci --config=buildbuddy
+build:buildbuddy-ci --build_metadata=ROLE=CI
+build:buildbuddy-ci --build_metadata=VISIBILITY=PUBLIC
