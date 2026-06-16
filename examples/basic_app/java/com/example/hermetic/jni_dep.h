@@ -1,0 +1,6 @@
+#ifndef EXAMPLES_BASIC_APP_JAVA_COM_EXAMPLE_HERMETIC_JNI_DEP_H_
+#define EXAMPLES_BASIC_APP_JAVA_COM_EXAMPLE_HERMETIC_JNI_DEP_H_
+
+int add_from_dep(int left, int right);
+
+#endif

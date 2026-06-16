@@ -1,0 +1,123 @@
+{
+  "versions": {
+    "r25b": {
+      "strip_prefix": "android-ndk-r25b",
+      "archives": {
+        "darwin": {
+          "file": "android-ndk-r25b-darwin.zip",
+          "sha256": "7e12f1f809878d4f5d5a901809277aa31546d36c10730fade2036d7d95b3607a"
+        },
+        "linux": {
+          "file": "android-ndk-r25b-linux.zip",
+          "sha256": "403ac3e3020dd0db63a848dcaba6ceb2603bf64de90949d5c4361f848e44b005"
+        },
+        "windows": {
+          "file": "android-ndk-r25b-windows.zip",
+          "sha256": "c9a72beda4663ab714c9fb3dc06bb9b9f124f2b5199957c86cd6f57eb59fd49a"
+        }
+      }
+    },
+    "r25c": {
+      "strip_prefix": "android-ndk-r25c",
+      "archives": {
+        "darwin": {
+          "file": "android-ndk-r25c-darwin.zip",
+          "sha256": "b01bae969a5d0bfa0da18469f650a1628dc388672f30e0ba231da5c74245bc92"
+        },
+        "linux": {
+          "file": "android-ndk-r25c-linux.zip",
+          "sha256": "769ee342ea75f80619d985c2da990c48b3d8eaf45f48783a2d48870d04b46108"
+        },
+        "windows": {
+          "file": "android-ndk-r25c-windows.zip",
+          "sha256": "f70093964f6cbbe19268f9876a20f92d3a593db3ad2037baadd25fd8d71e84e2"
+        }
+      }
+    },
+    "r26": {
+      "strip_prefix": "android-ndk-r26",
+      "archives": {
+        "darwin": {
+          "file": "android-ndk-r26-darwin.zip",
+          "sha256": "b2ab2fd17f71e2d2994c8c0ba2e48e99377806e05bf7477093344c26ab71dec0"
+        },
+        "linux": {
+          "file": "android-ndk-r26-linux.zip",
+          "sha256": "1505c2297a5b7a04ed20b5d44da5665e91bac2b7c0fbcd3ae99b6ccc3a61289a"
+        },
+        "windows": {
+          "file": "android-ndk-r26-windows.zip",
+          "sha256": "a748c6634b96991e15cb8902ffa4a498bba2ec6aa8028526de3c4c9dfcf00663"
+        }
+      }
+    },
+    "r26d": {
+      "strip_prefix": "android-ndk-r26d",
+      "archives": {
+        "darwin": {
+          "file": "android-ndk-r26d-darwin.zip",
+          "sha256": "ee2d0531685a69164fc0a66705d3a30109223f6fc01f1008ca5d8bc3a32d628d"
+        },
+        "linux": {
+          "file": "android-ndk-r26d-linux.zip",
+          "sha256": "eefeafe7ccf177de7cc57158da585e7af119bb7504a63604ad719e4b2a328b54"
+        },
+        "windows": {
+          "file": "android-ndk-r26d-windows.zip",
+          "sha256": "9b285da57a36818cb65ea5b93ec74f8138f48a40182ff2994f6aade4580ed597"
+        }
+      }
+    },
+    "r27d": {
+      "strip_prefix": "android-ndk-r27d",
+      "archives": {
+        "darwin": {
+          "file": "android-ndk-r27d-darwin.zip",
+          "sha256": "e69092f9d2bfa5d1199039980a14eb91c03cc971ab5c6968fc08a8e6b84e7bb7"
+        },
+        "linux": {
+          "file": "android-ndk-r27d-linux.zip",
+          "sha256": "601246087a682d1944e1e16dd85bc6e49560fe8b6d61255be2829178c8ed15d9"
+        },
+        "windows": {
+          "file": "android-ndk-r27d-windows.zip",
+          "sha256": "82094f53e66a76b6a9ec4fc35a5076091a92de3b91d13c5d4a7cfdb226304c59"
+        }
+      }
+    },
+    "r28c": {
+      "strip_prefix": "android-ndk-r28c",
+      "archives": {
+        "darwin": {
+          "file": "android-ndk-r28c-darwin.zip",
+          "sha256": "0d4599e8bbf1a1668a0d51a541729b2246360f350018a2081d0b302dbb594f2a"
+        },
+        "linux": {
+          "file": "android-ndk-r28c-linux.zip",
+          "sha256": "dfb20d396df28ca02a8c708314b814a4d961dc9074f9a161932746f815aa552f"
+        },
+        "windows": {
+          "file": "android-ndk-r28c-windows.zip",
+          "sha256": "6bec98ac2354d8a919760889a1a41d020132e5e8cfa1b1fe51610a72c36a466b"
+        }
+      }
+    },
+    "r29": {
+      "strip_prefix": "android-ndk-r29",
+      "archives": {
+        "darwin": {
+          "file": "android-ndk-r29-darwin.zip",
+          "sha256": "ce5e4b100ec5fe5be4eb3edcb2c02528824ff9cda3860f5304619be6c3da34d3"
+        },
+        "linux": {
+          "file": "android-ndk-r29-linux.zip",
+          "sha256": "4abbbcdc842f3d4879206e9695d52709603e52dd68d3c1fff04b3b5e7a308ecf"
+        },
+        "windows": {
+          "file": "android-ndk-r29-windows.zip",
+          "sha256": "4f83a1a87ea0d33ae2b43812ce27b768be949bc78acf90b955134d19e3068f1c"
+        }
+      }
+    }
+  }
+}

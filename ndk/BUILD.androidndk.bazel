@@ -1,0 +1,56 @@
+"""Generated Android NDK repository."""
+
+# NOTE: Mirrored from rules_android_ndk BUILD.ndk_root.tpl, needs to roughly be kept in sync
+
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//:platform_toolchains.bzl", "PLATFORM_TOOLCHAINS")
+load("//:target_systems.bzl", "CPU_CONSTRAINT", "TARGET_SYSTEM_NAMES")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "target_systems.bzl",
+    "sources/android/native_app_glue/android_native_app_glue.h",
+])
+
+[
+    toolchain(
+        name = "toolchain_{}_{}".format(platform_name, target_system_name),
+        exec_compatible_with = exec_compatible_with,
+        target_compatible_with = [
+            "@platforms//os:android",
+            CPU_CONSTRAINT[target_system_name],
+        ],
+        toolchain = "//{}:cc_toolchain_{}".format(clang_directory, target_system_name),
+        toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
+    )
+    for platform_name, clang_directory, exec_compatible_with in PLATFORM_TOOLCHAINS
+    for target_system_name in TARGET_SYSTEM_NAMES
+]
+
+cc_library(
+    name = "cpufeatures",
+    srcs = glob([
+        "ndk/sources/android/cpufeatures/*.c",
+        "sources/android/cpufeatures/*.c",
+    ]),
+    hdrs = glob([
+        "ndk/sources/android/cpufeatures/*.h",
+        "sources/android/cpufeatures/*.h",
+    ]),
+    linkopts = ["-ldl"],
+)
+
+# NOTE: New projects should use GameActivity instead.
+# https://developer.android.com/games/agdk/game-activity
+cc_library(
+    name = "native_app_glue",
+    srcs = glob([
+        "ndk/sources/android/native_app_glue/*.c",
+        "sources/android/native_app_glue/*.c",
+    ]),
+    hdrs = glob([
+        "ndk/sources/android/native_app_glue/*.h",
+        "sources/android/native_app_glue/*.h",
+    ]),
+)
