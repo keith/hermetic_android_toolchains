@@ -225,43 +225,10 @@ filegroup(
     srcs = ["."],
 )
 
-filegroup(
-    name = "qemu2_x86",
-    srcs = [],
-)
-
-filegroup(
-    name = "emulator_shared_libs",
-    srcs = [],
-)
-
-filegroup(
-    name = "emulator_x86_bios",
-    srcs = [],
-)
-
-alias(
-    name = "emulator",
-    actual = ":fail",
-)
-
-alias(
-    name = "emulator_arm",
-    actual = ":fail",
-)
-
-alias(
-    name = "emulator_x86",
-    actual = ":fail",
-)
-
-alias(
-    name = "mksd",
-    actual = ":fail",
-)
+%{emulator_aliases}
 
 create_system_images_filegroups(
-    system_image_dirs = [],
+    system_image_dirs = %{system_image_dirs},
 )
 
 exports_files(
