@@ -8,6 +8,9 @@ common --android_platforms=@rules_android//:x86_64
 common --repo_env=ACCEPTED_ANDROID_SDK_LICENSE_VERSION=35
 common --repo_env=ACCEPTED_ANDROID_NDK_LICENSE_VERSION=r25c
 
+common --@protobuf//bazel/toolchains:prefer_prebuilt_protoc
+common --incompatible_enable_proto_toolchain_resolution
+
 # --remote_header=x-buildbuddy-api-key=<BUILDBUDDY_API_KEY secret>.
 build:buildbuddy --bes_results_url=https://app.buildbuddy.io/invocation/
 build:buildbuddy --bes_backend=grpcs://remote.buildbuddy.io
