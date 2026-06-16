@@ -1,4 +1,38 @@
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("//tests:action_command_line_test.bzl", "action_command_line_test")
+
+action_command_line_test(
+    name = "cc_compile_uses_hermetic_ndk_test",
+    expected_argv = [
+        "+android+androidndk",
+        "toolchains/llvm/prebuilt",
+        "bin/clang",
+    ],
+    mnemonic = "CppCompile",
+    not_expected_argv = [
+        "ANDROID_NDK_HOME",
+        "local_config_cc",
+        "rules_android_ndk++android_ndk_repository_extension+androidndk",
+        "/usr/bin/clang",
+    ],
+    target_under_test = "//examples/basic_app/java/com/example/hermetic:jni_dep",
+)
+
+action_command_line_test(
+    name = "android_packaging_uses_hermetic_sdk_test",
+    expected_argv = [
+        "+android+androidsdk",
+        "zipalign",
+    ],
+    mnemonic = "AndroidZipAlign",
+    not_expected_argv = [
+        "ANDROID_HOME",
+        "local_config_android",
+        "/opt/android-sdk",
+        "rules_android++android_sdk_repository_extension+androidsdk",
+    ],
+    target_under_test = "//examples/basic_app/java/com/example/hermetic:app",
+)
 
 # Makes sure we set these to something that doesn't just error
 build_test(
