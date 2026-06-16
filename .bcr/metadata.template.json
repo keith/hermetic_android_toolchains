@@ -1,0 +1,15 @@
+{
+    "homepage": "https://github.com/keith/hermetic_android_toolchains",
+    "maintainers": [
+        {
+            "email": "keithbsmiley@gmail.com",
+            "github": "keith",
+            "name": "Keith Smiley"
+        }
+    ],
+    "repository": [
+        "github:keith/hermetic_android_toolchains"
+    ],
+    "versions": [],
+    "yanked_versions": {}
+}

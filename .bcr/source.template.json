@@ -1,0 +1,5 @@
+{
+    "integrity": "",
+    "strip_prefix": "",
+    "url": "https://github.com/keith/hermetic_android_toolchains/releases/download/{TAG}/hermetic_android_toolchains.{TAG}.tar.gz"
+}

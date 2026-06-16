@@ -1,0 +1,44 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'The new version to tag, ex: 1.0.5'
+        required: true
+        type: string
+
+jobs:
+  create_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Create Release
+        run: |
+          set -euo pipefail
+          archive="hermetic_android_toolchains.$TAG.tar.gz"
+
+          COPYFILE_DISABLE=1 tar czvf "$archive" ./*
+          gh api repos/${{ github.repository }}/releases/generate-notes -f tag_name="$TAG" -f target_commitish="$GITHUB_REF_NAME" --jq .body > notes.md
+          ./.github/generate-notes.sh "$TAG" "$archive" >> notes.md
+          gh release create "$TAG" --title "$TAG" --target "$GITHUB_REF_NAME" --notes-file notes.md "$archive"
+        env:
+          TAG: ${{ inputs.tag }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    needs: create_release
+    uses: bazel-contrib/publish-to-bcr/.github/workflows/publish.yaml@v1.4.1
+    with:
+      tag_name: ${{ inputs.tag }}
+      registry_fork: keith/bazel-central-registry
+      # TODO: Enable attestations once supported
+      # https://github.com/bazel-contrib/publish-to-bcr/issues/342
+      attest: false
+    secrets:
+      publish_token: ${{ secrets.BCR_PUBLISH_TOKEN }}
+    permissions:
+      attestations: write
+      contents: write
+      id-token: write
