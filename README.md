@@ -49,7 +49,7 @@ full details of a SDK / NDK in your `MODULE.bazel`:
 
 ```bzl
 android.sdk(
-    version = "35-mirror",
+    version = "35",
     api_level = "35",
     build_tools_version = "35.0.0",
     build_tools_directory = "35.0.0",
@@ -78,7 +78,7 @@ android.sdk(
 )
 
 android.ndk(
-    version = "r27d-mirror",
+    version = "r27d",
     urls = {
         "linux": "https://mirror.example/android-ndk-r27d-linux.zip",
         "darwin": "https://mirror.example/android-ndk-r27d-darwin.zip",
