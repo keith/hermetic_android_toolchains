@@ -28,11 +28,18 @@ def _sdk_kwargs(tag):
         "build_tools_strip_prefixes": tag.build_tools_strip_prefixes,
         "build_tools_urls": tag.build_tools_urls,
         "build_tools_version": tag.build_tools_version,
+        "emulator_sha256s": tag.emulator_sha256s,
+        "emulator_strip_prefixes": tag.emulator_strip_prefixes,
+        "emulator_urls": tag.emulator_urls,
+        "emulator_version": tag.emulator_version,
         "platform_tools_sha256s": tag.platform_tools_sha256s,
         "platform_tools_urls": tag.platform_tools_urls,
         "platforms_sha256": tag.platforms_sha256,
         "platforms_strip_prefix": tag.platforms_strip_prefix,
         "platforms_url": tag.platforms_url,
+        "system_image_sha256s": tag.system_image_sha256s,
+        "system_image_strip_prefixes": tag.system_image_strip_prefixes,
+        "system_image_urls": tag.system_image_urls,
         "version": tag.version or DEFAULT_SDK_VERSION,
     }
 
