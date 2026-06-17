@@ -10,11 +10,11 @@ env:
   BUILDBUDDY_API_KEY: ${{ secrets.BUILDBUDDY_API_KEY }}
 
 jobs:
-  bazel_8_0:
-    name: Bazel 8.0.0 (${{ matrix.os }})
+  bazel_lowest_supported:
+    name: Bazel 8.4.2 (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     env:
-      USE_BAZEL_VERSION: "8.0.0"
+      USE_BAZEL_VERSION: "8.4.2"
     strategy:
       fail-fast: false
       matrix:
@@ -144,7 +144,7 @@ jobs:
     name: CI
     runs-on: ubuntu-latest
     needs:
-      - bazel_8_0
+      - bazel_lowest_supported
       - bazel_8
       - bazel_9
       - bazel_latest
@@ -155,19 +155,19 @@ jobs:
       - name: Check Bazel jobs
         shell: bash
         env:
-          BAZEL_8_0_RESULT: ${{ needs.bazel_8_0.result }}
+          BAZEL_LOWEST_SUPPORTED_RESULT: ${{ needs.bazel_lowest_supported.result }}
           BAZEL_8_RESULT: ${{ needs.bazel_8.result }}
           BAZEL_9_RESULT: ${{ needs.bazel_9.result }}
           BAZEL_LATEST_RESULT: ${{ needs.bazel_latest.result }}
           BAZEL_ROLLING_RESULT: ${{ needs.bazel_rolling.result }}
         run: |
-          echo "Bazel 8.0.0: ${BAZEL_8_0_RESULT}"
+          echo "Bazel 8.4.2: ${BAZEL_LOWEST_SUPPORTED_RESULT}"
           echo "Bazel 8.x: ${BAZEL_8_RESULT}"
           echo "Bazel 9.x: ${BAZEL_9_RESULT}"
           echo "Bazel latest: ${BAZEL_LATEST_RESULT}"
           echo "Bazel rolling: ${BAZEL_ROLLING_RESULT}"
 
-          if [[ "${BAZEL_8_0_RESULT}" != "success" || \
+          if [[ "${BAZEL_LOWEST_SUPPORTED_RESULT}" != "success" || \
                 "${BAZEL_8_RESULT}" != "success" || \
                 "${BAZEL_9_RESULT}" != "success" || \
                 "${BAZEL_LATEST_RESULT}" != "success" || \
