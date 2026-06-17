@@ -11,7 +11,7 @@ env:
 
 jobs:
   bazel_lowest_supported:
-    name: Bazel 8.4.2 (${{ matrix.os }})
+    name: Bazel lowest supported version (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     env:
       USE_BAZEL_VERSION: "8.4.2"
