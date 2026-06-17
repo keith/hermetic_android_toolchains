@@ -186,29 +186,13 @@ android_sdk(
     zipalign = ":zipalign",
 )
 
+# Exists for backwards compatibility with MODULE.bazel register_toolchains copied from rules_android
 toolchain(
     name = "sdk-toolchain",
     tags = ["manual"],
     target_compatible_with = ["@platforms//:incompatible"],
     toolchain = ":fail",
     toolchain_type = ":sdk_toolchain_type",
-)
-
-android_toolchain(
-    name = "android_default",
-    aapt2 = ":aapt2",
-    adb = ":adb",
-    android_archive_jar_optimization_inputs_validator = ":fail",
-    android_archive_packages_validator = ":fail",
-    apk_to_bundle_tool = ":fail",
-    centralize_r_class_tool = ":fail",
-    desugar_globals_jar = ":fail",
-    merge_baseline_profiles_tool = ":fail",
-    object_method_rewriter = ":fail",
-    profgen = ":fail",
-    proto_map_generator = ":fail",
-    tags = ["manual"],
-    translation_merger = ":fail",
 )
 
 filegroup(

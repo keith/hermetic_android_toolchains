@@ -47,5 +47,6 @@ build_test(
         "@androidsdk//:emulator_x86_bios",
         "@androidsdk//:mksd",
         "@androidsdk//:qemu2_x86",
+        "@androidsdk//:sdk-toolchain",
     ],
 )
