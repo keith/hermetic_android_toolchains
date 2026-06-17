@@ -21,6 +21,7 @@ config_feature_flag(
         "false",
     ],
     default_value = "true",
+    visibility = ["//visibility:private"],
 )
 
 config_setting(
@@ -28,13 +29,7 @@ config_setting(
     flag_values = {
         ":true": "true",
     },
-)
-
-config_setting(
-    name = "always_false",
-    flag_values = {
-        ":true": "false",
-    },
+    visibility = ["//visibility:private"],
 )
 
 config_setting(
@@ -43,6 +38,7 @@ config_setting(
         "@platforms//os:linux",
         "@platforms//cpu:x86_64",
     ],
+    visibility = ["//visibility:private"],
 )
 
 config_setting(
@@ -50,6 +46,7 @@ config_setting(
     constraint_values = [
         "@platforms//os:macos",
     ],
+    visibility = ["//visibility:private"],
 )
 
 config_setting(
@@ -58,6 +55,7 @@ config_setting(
         "@platforms//os:windows",
         "@platforms//cpu:x86_64",
     ],
+    visibility = ["//visibility:private"],
 )
 
 config_setting(
