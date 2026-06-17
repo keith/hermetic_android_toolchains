@@ -186,6 +186,15 @@ android_sdk(
     zipalign = ":zipalign",
 )
 
+# Exists for backwards compatibility with MODULE.bazel register_toolchains copied from rules_android
+toolchain(
+    name = "sdk-toolchain",
+    tags = ["manual"],
+    target_compatible_with = ["@platforms//:incompatible"],
+    toolchain = ":fail",
+    toolchain_type = ":sdk_toolchain_type",
+)
+
 filegroup(
     name = "files",
     srcs = [
