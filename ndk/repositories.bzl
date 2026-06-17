@@ -2,8 +2,6 @@
 
 load("//ndk:versions.bzl", "DEFAULT_API_LEVEL", "DEFAULT_NDK_VERSION", "NDK_VERSIONS")
 
-visibility("//:__subpackages__")
-
 ANDROID_NDK_LICENSE_ENV = "ACCEPTED_ANDROID_NDK_LICENSE_VERSION"
 
 NDK_TAG = tag_class(attrs = {

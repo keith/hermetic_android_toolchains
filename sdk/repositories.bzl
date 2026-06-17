@@ -2,8 +2,6 @@
 
 load("//sdk:versions.bzl", "DEFAULT_SDK_VERSION", "SDK_VERSIONS")
 
-visibility("//:__subpackages__")
-
 ANDROID_SDK_LICENSE_ENV = "ACCEPTED_ANDROID_SDK_LICENSE_VERSION"
 
 SDK_TAG = tag_class(attrs = {
