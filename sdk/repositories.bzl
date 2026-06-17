@@ -698,6 +698,13 @@ def _platform_aliases(sdk):
     build_tools_directory = sdk["build_tools_directory"]
     blocks = [
         _platform_select_alias(
+            "sdk-toolchain",
+            platforms,
+            ":sdk_linux_toolchain",
+            ":sdk_darwin_toolchain",
+            ":sdk_windows_toolchain",
+        ),
+        _platform_select_alias(
             "aapt",
             platforms,
             _tool_alias_label("linux", build_tools_directory, "aapt"),
