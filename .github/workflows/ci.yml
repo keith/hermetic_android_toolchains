@@ -10,6 +10,32 @@ env:
   BUILDBUDDY_API_KEY: ${{ secrets.BUILDBUDDY_API_KEY }}
 
 jobs:
+  bazel_lowest_supported:
+    name: Bazel lowest supported version (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    env:
+      USE_BAZEL_VERSION: "8.4.2"
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: bazel-contrib/setup-bazel@0.19.0
+        with:
+          bazelisk-cache: true
+          disk-cache: true
+          repository-cache: true
+
+      - name: Test
+        shell: bash
+        run: bazel test --config=buildbuddy-ci ${BUILDBUDDY_API_KEY:+--remote_header=x-buildbuddy-api-key=$BUILDBUDDY_API_KEY} //...
+
   bazel_8:
     name: Bazel 8.x (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -118,6 +144,7 @@ jobs:
     name: CI
     runs-on: ubuntu-latest
     needs:
+      - bazel_lowest_supported
       - bazel_8
       - bazel_9
       - bazel_latest
@@ -128,17 +155,20 @@ jobs:
       - name: Check Bazel jobs
         shell: bash
         env:
+          BAZEL_LOWEST_SUPPORTED_RESULT: ${{ needs.bazel_lowest_supported.result }}
           BAZEL_8_RESULT: ${{ needs.bazel_8.result }}
           BAZEL_9_RESULT: ${{ needs.bazel_9.result }}
           BAZEL_LATEST_RESULT: ${{ needs.bazel_latest.result }}
           BAZEL_ROLLING_RESULT: ${{ needs.bazel_rolling.result }}
         run: |
+          echo "Bazel 8.4.2: ${BAZEL_LOWEST_SUPPORTED_RESULT}"
           echo "Bazel 8.x: ${BAZEL_8_RESULT}"
           echo "Bazel 9.x: ${BAZEL_9_RESULT}"
           echo "Bazel latest: ${BAZEL_LATEST_RESULT}"
           echo "Bazel rolling: ${BAZEL_ROLLING_RESULT}"
 
-          if [[ "${BAZEL_8_RESULT}" != "success" || \
+          if [[ "${BAZEL_LOWEST_SUPPORTED_RESULT}" != "success" || \
+                "${BAZEL_8_RESULT}" != "success" || \
                 "${BAZEL_9_RESULT}" != "success" || \
                 "${BAZEL_LATEST_RESULT}" != "success" || \
                 "${BAZEL_ROLLING_RESULT}" != "success" ]]; then

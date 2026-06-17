@@ -2,8 +2,6 @@
 
 load("//sdk:versions.bzl", "DEFAULT_SDK_VERSION", "SDK_VERSIONS")
 
-visibility("//:__subpackages__")
-
 ANDROID_SDK_LICENSE_ENV = "ACCEPTED_ANDROID_SDK_LICENSE_VERSION"
 
 SDK_TAG = tag_class(attrs = {
@@ -852,7 +850,9 @@ def _hermetic_android_sdk_repository_impl(rctx):
         },
     )
 
-    return rctx.repo_metadata(reproducible = True)
+    if hasattr(rctx, "repo_metadata"):
+        return rctx.repo_metadata(reproducible = True)
+    return None
 
 hermetic_android_sdk_repository = repository_rule(
     implementation = _hermetic_android_sdk_repository_impl,

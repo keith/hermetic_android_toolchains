@@ -2,8 +2,6 @@
 
 load("//ndk:versions.bzl", "DEFAULT_API_LEVEL", "DEFAULT_NDK_VERSION", "NDK_VERSIONS")
 
-visibility("//:__subpackages__")
-
 ANDROID_NDK_LICENSE_ENV = "ACCEPTED_ANDROID_NDK_LICENSE_VERSION"
 
 NDK_TAG = tag_class(attrs = {
@@ -214,7 +212,9 @@ def _hermetic_android_ndk_repository_impl(rctx):
     )
     _generate_platform_build_files(rctx, ndk)
 
-    return rctx.repo_metadata(reproducible = True)
+    if hasattr(rctx, "repo_metadata"):
+        return rctx.repo_metadata(reproducible = True)
+    return None
 
 hermetic_android_ndk_repository = repository_rule(
     implementation = _hermetic_android_ndk_repository_impl,
