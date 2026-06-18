@@ -2,7 +2,6 @@
 
 load(
     ":helper.bzl",
-    "create_system_images_filegroups",
     "string_flag",
 )
 load("@rules_android//rules:rules.bzl", "android_sdk")
@@ -205,14 +204,4 @@ filegroup(
 filegroup(
     name = "sdk_path",
     srcs = ["."],
-)
-
-%{emulator_aliases}
-
-create_system_images_filegroups(
-    system_image_dirs = %{system_image_dirs},
-)
-
-exports_files(
-    glob(["system-images/**"], allow_empty = True),
 )
