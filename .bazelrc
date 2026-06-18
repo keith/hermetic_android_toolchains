@@ -10,6 +10,10 @@ common --android_platforms=@rules_android//:x86_64
 # Help CI OOMs on Windows
 build:windows --nodesugar_for_android
 
+mobile-install:linux --adb=external/+android+androidsdk/platform-tools/linux/adb
+mobile-install:macos --adb=external/+android+androidsdk/platform-tools/darwin/adb
+mobile-install:windows --adb=external/+android+androidsdk/platform-tools/windows/adb.exe
+
 common --repo_env=ACCEPTED_ANDROID_SDK_LICENSE_VERSION=35
 common --repo_env=ACCEPTED_ANDROID_NDK_LICENSE_VERSION=r25c
 

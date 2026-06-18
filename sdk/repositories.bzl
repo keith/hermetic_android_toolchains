@@ -726,6 +726,13 @@ def _platform_aliases(sdk):
             _adb_alias_label("windows"),
         ),
         _platform_select_alias(
+            "platform-tools/adb",
+            platforms,
+            _adb_alias_label("linux"),
+            _adb_alias_label("darwin"),
+            _adb_alias_label("windows"),
+        ),
+        _platform_select_alias(
             "apksigner",
             platforms,
             ":apksigner_linux",
