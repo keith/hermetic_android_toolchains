@@ -40,6 +40,26 @@
             "strip_prefix": "android-16"
           }
         }
+      },
+      "37.0.0": {
+        "directory": "37.0.0",
+        "archives": {
+          "darwin": {
+            "file": "build-tools_r37_macosx.zip",
+            "sha256": "b5b1ac529028a49f11b596b89d9b34252e0f39388ee7dbd16ae3110f1c9c5722",
+            "strip_prefix": "android-37.0"
+          },
+          "linux": {
+            "file": "build-tools_r37_linux.zip",
+            "sha256": "01af179347cbcd9c208b7f8171f7b21f6dd1d2f85bcd15e88caa51d5d7b86060",
+            "strip_prefix": "android-37.0"
+          },
+          "windows": {
+            "file": "build-tools_r37_windows.zip",
+            "sha256": "68075aa319ed8a01cf1a565ed1e61a3c1a801dd49191c35851248dc293c33b1a",
+            "strip_prefix": "android-37.0"
+          }
+        }
       }
     },
     "emulator": {
@@ -169,6 +189,19 @@
       "platform": {
         "file": "platform-36_r02.zip",
         "sha256": "37607369a28c5b640b3a7998868d45898ebcb777565a0e85f9acf36f29631d2e"
+      }
+    },
+    "37.0": {
+      "api_level": "37.0",
+      "build_tools_version": "37.0.0",
+      "emulator_version": "36.6.11",
+      "platform_tools_version": "37.0.0",
+      "system_images": [
+        "android-28/default/x86"
+      ],
+      "platform": {
+        "file": "platform-37.0_r02.zip",
+        "sha256": "840b23e827f96e64aea4c89a1194aac3dc5f6bad37edb231c5c795d890330e8d"
       }
     }
   }
