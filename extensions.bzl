@@ -1,9 +1,7 @@
 """Module extension for Android SDK and NDK repositories."""
 
 load("//ndk:repositories.bzl", "ANDROID_NDK_LICENSE_ENV", "NDK_TAG", "hermetic_android_ndk_repository")
-load("//ndk:versions.bzl", "DEFAULT_NDK_VERSION")
 load("//sdk:repositories.bzl", "ANDROID_SDK_LICENSE_ENV", "SDK_TAG", "hermetic_android_sdk_repository")
-load("//sdk:versions.bzl", "DEFAULT_SDK_VERSION")
 
 def _single_root_tag(module_ctx, tag_name):
     root_tags = []
@@ -19,7 +17,11 @@ def _single_root_tag(module_ctx, tag_name):
 
 def _sdk_kwargs(tag):
     if not tag:
-        return {"version": DEFAULT_SDK_VERSION}
+        fail("Expected a root android.sdk(...) tag with version and build_tools_version.")
+    if not tag.version:
+        fail("android.sdk(...) requires version.")
+    if not tag.build_tools_version:
+        fail("android.sdk(...) requires build_tools_version.")
 
     return {
         "api_level": tag.api_level,
@@ -40,19 +42,21 @@ def _sdk_kwargs(tag):
         "system_image_sha256s": tag.system_image_sha256s,
         "system_image_strip_prefixes": tag.system_image_strip_prefixes,
         "system_image_urls": tag.system_image_urls,
-        "version": tag.version or DEFAULT_SDK_VERSION,
+        "version": tag.version,
     }
 
 def _ndk_kwargs(tag):
     if not tag:
-        return {"version": DEFAULT_NDK_VERSION}
+        fail("Expected a root android.ndk(...) tag with version.")
+    if not tag.version:
+        fail("android.ndk(...) requires version.")
 
     return {
         "api_level": tag.api_level,
         "sha256s": tag.sha256s,
         "strip_prefix": tag.strip_prefix,
         "urls": tag.urls,
-        "version": tag.version or DEFAULT_NDK_VERSION,
+        "version": tag.version,
     }
 
 def _android_impl(module_ctx):

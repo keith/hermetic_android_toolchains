@@ -18,7 +18,10 @@ rules_java_toolchains = use_extension("@rules_java//java:extensions.bzl", "toolc
 use_repo(rules_java_toolchains, "remote_java_tools")
 
 android = use_extension("//:extensions.bzl", "android", dev_dependency = True)
-android.sdk(version = "35")
+android.sdk(
+    version = "35",
+    build_tools_version = "35.0.0",
+)
 android.ndk(version = "r25c")
 use_repo(android, "androidndk", "androidsdk")
 

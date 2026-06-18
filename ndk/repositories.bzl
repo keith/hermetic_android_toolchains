@@ -1,13 +1,13 @@
 """Repository rule for downloading a hermetic Android NDK."""
 
-load("//ndk:versions.bzl", "DEFAULT_API_LEVEL", "DEFAULT_NDK_VERSION", "NDK_VERSIONS")
+load("//ndk:versions.bzl", "DEFAULT_API_LEVEL", "NDK_VERSIONS")
 
 ANDROID_NDK_LICENSE_ENV = "ACCEPTED_ANDROID_NDK_LICENSE_VERSION"
 
 NDK_TAG = tag_class(attrs = {
     "version": attr.string(
-        default = DEFAULT_NDK_VERSION,
-        doc = "Known NDK version. Defaults to {}.".format(DEFAULT_NDK_VERSION),
+        doc = "Known NDK version.",
+        mandatory = True,
     ),
     "api_level": attr.int(
         doc = "Minimum Android API level for the NDK C/C++ toolchains. Defaults to {}.".format(DEFAULT_API_LEVEL),
@@ -194,6 +194,9 @@ def _generate_platform_build_files(rctx, ndk):
         )
 
 def _hermetic_android_ndk_repository_impl(rctx):
+    if not rctx.attr.version:
+        fail("hermetic_android_ndk_repository requires version.")
+
     _require_license(rctx)
     ndk = _resolve_ndk(rctx)
     _download_ndk(rctx, ndk)

@@ -1,18 +1,20 @@
 """Repository rule for downloading a hermetic Android SDK."""
 
-load("//sdk:versions.bzl", "DEFAULT_SDK_VERSION", "SDK_VERSIONS")
+load("//sdk:versions.bzl", "SDK_VERSIONS")
 
 ANDROID_SDK_LICENSE_ENV = "ACCEPTED_ANDROID_SDK_LICENSE_VERSION"
 
 SDK_TAG = tag_class(attrs = {
     "version": attr.string(
-        doc = "Known SDK bundle version or custom SDK version identifier. Defaults to {} unless custom archives are provided.".format(DEFAULT_SDK_VERSION),
+        doc = "Known SDK bundle version or custom SDK version identifier.",
+        mandatory = True,
     ),
     "api_level": attr.string(
         doc = "Android API level to expose. Overrides the known bundle default.",
     ),
     "build_tools_version": attr.string(
-        doc = "Android build-tools version. Overrides the known bundle default.",
+        doc = "Android build-tools version.",
+        mandatory = True,
     ),
     "build_tools_directory": attr.string(
         doc = "Directory name under build-tools/. Defaults to build_tools_version.",
@@ -236,7 +238,7 @@ def _common_platforms(*platform_groups):
 def _resolve_known_sdk(rctx, data, known):
     components = data["components"]
     api_level = rctx.attr.api_level or known["api_level"]
-    build_tools_version = rctx.attr.build_tools_version or known["build_tools_version"]
+    build_tools_version = rctx.attr.build_tools_version
     emulator_version = rctx.attr.emulator_version or known["emulator_version"]
 
     if build_tools_version not in components["build_tools"]:
@@ -850,6 +852,11 @@ def _write_runner_scripts(rctx, sdk):
             )
 
 def _hermetic_android_sdk_repository_impl(rctx):
+    if not rctx.attr.version:
+        fail("hermetic_android_sdk_repository requires version.")
+    if not rctx.attr.build_tools_version:
+        fail("hermetic_android_sdk_repository requires build_tools_version.")
+
     _require_license(rctx)
     sdk = _resolve_sdk(rctx)
     _download_sdk(rctx, sdk)
@@ -883,7 +890,7 @@ hermetic_android_sdk_repository = repository_rule(
         "build_tools_sha256s": attr.string_dict(),
         "build_tools_strip_prefixes": attr.string_dict(),
         "build_tools_urls": attr.string_dict(),
-        "build_tools_version": attr.string(),
+        "build_tools_version": attr.string(mandatory = True),
         "emulator_sha256s": attr.string_dict(),
         "emulator_strip_prefixes": attr.string_dict(),
         "emulator_urls": attr.string_dict(),
