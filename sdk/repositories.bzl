@@ -712,6 +712,13 @@ def _platform_aliases(sdk):
             _tool_alias_label("windows", build_tools_directory, "aapt2"),
         ),
         _platform_select_alias(
+            "aapt2_binary",
+            platforms,
+            _tool_alias_label("linux", build_tools_directory, "aapt2"),
+            _tool_alias_label("darwin", build_tools_directory, "aapt2"),
+            _tool_alias_label("windows", build_tools_directory, "aapt2"),
+        ),
+        _platform_select_alias(
             "aidl",
             platforms,
             _tool_alias_label("linux", build_tools_directory, "aidl"),
@@ -755,6 +762,13 @@ def _platform_aliases(sdk):
         ),
         _platform_select_alias(
             "zipalign",
+            platforms,
+            _tool_alias_label("linux", build_tools_directory, "zipalign"),
+            _tool_alias_label("darwin", build_tools_directory, "zipalign"),
+            _tool_alias_label("windows", build_tools_directory, "zipalign"),
+        ),
+        _platform_select_alias(
+            "zipalign_binary",
             platforms,
             _tool_alias_label("linux", build_tools_directory, "zipalign"),
             _tool_alias_label("darwin", build_tools_directory, "zipalign"),
