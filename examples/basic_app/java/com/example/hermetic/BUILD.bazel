@@ -17,6 +17,7 @@ android_library(
         "MainActivity.java",
     ],
     manifest = "AndroidManifest.xml",
+    resource_files = ["res/values/strings.xml"],
     tags = ["manual"],
     deps = [":jni"],
 )

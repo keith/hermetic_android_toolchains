@@ -1,0 +1,3 @@
+<resources>
+    <string name="jni_result_prefix">JNI result: </string>
+</resources>
