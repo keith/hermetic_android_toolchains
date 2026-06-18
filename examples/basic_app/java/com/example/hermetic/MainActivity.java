@@ -11,7 +11,7 @@ public final class MainActivity extends Activity {
     System.loadLibrary("jni");
 
     TextView textView = new TextView(this);
-    textView.setText("JNI result: " + Jni.add(20, 22));
+    textView.setText(getString(R.string.jni_result_prefix) + Jni.add(20, 22));
     setContentView(textView);
   }
 }
