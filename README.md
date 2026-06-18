@@ -116,3 +116,16 @@ android.ndk(
     strip_prefix = "android-ndk-r27d",
 )
 ```
+
+## `adb` setup
+
+If you want to use the `adb` CLI that comes with the vendored SDK
+instead of one installed on the host system, you must tell bazel where
+to find it by adding this to your `.bazelrc`:
+
+```
+common --enable_platform_specific_config
+mobile-install:linux --adb=external/+android+androidsdk/platform-tools/linux/adb
+mobile-install:macos --adb=external/+android+androidsdk/platform-tools/darwin/adb
+mobile-install:windows --adb=external/+android+androidsdk/platform-tools/windows/adb.exe
+```
