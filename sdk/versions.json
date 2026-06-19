@@ -85,9 +85,72 @@
     }
   },
   "versions": {
+    "24": {
+      "api_level": "24",
+      "build_tools_version": "37.0.0",
+      "platform_tools_version": "37.0.0",
+      "platform": {
+        "file": "platform-24_r02.zip",
+        "sha256": "f268f5945c6ece7ea95c1c252067280854d2a20da924e22ae4720287df8bdbc9"
+      }
+    },
+    "25": {
+      "api_level": "25",
+      "build_tools_version": "37.0.0",
+      "platform_tools_version": "37.0.0",
+      "platform": {
+        "file": "platform-25_r03.zip",
+        "sha256": "9b742d34590fe73fb7229e34835ecffb1846ca389d9f924f0b2a37de525dc6b8"
+      }
+    },
+    "26": {
+      "api_level": "26",
+      "build_tools_version": "37.0.0",
+      "platform_tools_version": "37.0.0",
+      "platform": {
+        "file": "platform-26_r02.zip",
+        "sha256": "2aafa7d19c5e9c4b643ee6ade3d85ef89dc2f79e8383efdb9baf7fddad74b52a"
+      }
+    },
+    "27": {
+      "api_level": "27",
+      "build_tools_version": "37.0.0",
+      "platform_tools_version": "37.0.0",
+      "platform": {
+        "file": "platform-27_r03.zip",
+        "sha256": "020c4c090bc82ce87ebaae5d1a922e21b39a1d03c78ffa43f0c3e42fc7d28169"
+      }
+    },
+    "28": {
+      "api_level": "28",
+      "build_tools_version": "37.0.0",
+      "platform_tools_version": "37.0.0",
+      "platform": {
+        "file": "platform-28_r06.zip",
+        "sha256": "8452dbbf9668a428abb243c4f02a943b7aa83af3cca627629a15c4c09f28e7bd"
+      }
+    },
+    "29": {
+      "api_level": "29",
+      "build_tools_version": "37.0.0",
+      "platform_tools_version": "37.0.0",
+      "platform": {
+        "file": "platform-29_r05.zip",
+        "sha256": "951da8bf175254da74626824f919bd28def64f8828f29dd3b124a535cf4049d8"
+      }
+    },
+    "30": {
+      "api_level": "30",
+      "build_tools_version": "37.0.0",
+      "platform_tools_version": "37.0.0",
+      "platform": {
+        "file": "platform-30_r03.zip",
+        "sha256": "f3f5b75744dbf6ee6ed3e8174a71e513bfee502d0bc3463ea97e517bff68d84e"
+      }
+    },
     "31": {
       "api_level": "31",
-      "build_tools_version": "35.0.0",
+      "build_tools_version": "37.0.0",
       "platform_tools_version": "37.0.0",
       "platform": {
         "file": "platform-31_r01.zip",
@@ -96,7 +159,7 @@
     },
     "32": {
       "api_level": "32",
-      "build_tools_version": "35.0.0",
+      "build_tools_version": "37.0.0",
       "platform_tools_version": "37.0.0",
       "platform": {
         "file": "platform-32_r01.zip",
@@ -105,7 +168,7 @@
     },
     "33": {
       "api_level": "33",
-      "build_tools_version": "35.0.0",
+      "build_tools_version": "37.0.0",
       "platform_tools_version": "37.0.0",
       "platform": {
         "file": "platform-33-ext3_r03.zip",
@@ -114,7 +177,7 @@
     },
     "34": {
       "api_level": "34",
-      "build_tools_version": "35.0.0",
+      "build_tools_version": "37.0.0",
       "platform_tools_version": "37.0.0",
       "platform": {
         "file": "platform-34-ext7_r03.zip",
@@ -123,7 +186,7 @@
     },
     "35": {
       "api_level": "35",
-      "build_tools_version": "35.0.0",
+      "build_tools_version": "37.0.0",
       "platform_tools_version": "37.0.0",
       "platform": {
         "file": "platform-35_r02.zip",
@@ -132,11 +195,20 @@
     },
     "36": {
       "api_level": "36",
-      "build_tools_version": "36.0.0",
+      "build_tools_version": "37.0.0",
       "platform_tools_version": "37.0.0",
       "platform": {
         "file": "platform-36_r02.zip",
         "sha256": "37607369a28c5b640b3a7998868d45898ebcb777565a0e85f9acf36f29631d2e"
+      }
+    },
+    "36.1": {
+      "api_level": "36.1",
+      "build_tools_version": "37.0.0",
+      "platform_tools_version": "37.0.0",
+      "platform": {
+        "file": "platform-36.1_r01.zip",
+        "sha256": "265e9aa7d8db6abe7ad1696085d5d62784b341084c625de46db530970b1e806d"
       }
     },
     "37.0": {
