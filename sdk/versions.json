@@ -41,6 +41,26 @@
           }
         }
       },
+      "36.1.0": {
+        "directory": "36.1.0",
+        "archives": {
+          "darwin": {
+            "file": "build-tools_r36.1_macosx.zip",
+            "sha256": "cc56be1d4ea95041f32f4ebf3a4f5c6b990c7749d706852395006b5654eb82ff",
+            "strip_prefix": "android-16"
+          },
+          "linux": {
+            "file": "build-tools_r36.1_linux.zip",
+            "sha256": "a7b5889e4a79fcf3b0976bef40d401f4240fb1eed891d9d91169da1111e11d78",
+            "strip_prefix": "android-16"
+          },
+          "windows": {
+            "file": "build-tools_r36.1_windows.zip",
+            "sha256": "23189d2d52b40a070a05e9cf7e497c9563f67fee76902e8fd3135ef29ef4dbeb",
+            "strip_prefix": "android-16"
+          }
+        }
+      },
       "37.0.0": {
         "directory": "37.0.0",
         "archives": {
