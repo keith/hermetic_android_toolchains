@@ -66,6 +66,8 @@ _PLATFORMS = {
     },
 }
 
+SDK_PLATFORMS = sorted(_PLATFORMS.keys())
+
 def _require_license(rctx):
     value = rctx.getenv(ANDROID_SDK_LICENSE_ENV)
     if value != rctx.attr.version:
@@ -327,12 +329,12 @@ def _script_runner(name, platform, build_tools_directory):
         tool_path = tool_path,
     )
 
-def _platform_tool(platform, build_tools_directory, tool, executable_extension):
+def _platform_tool(platform, build_tools_directory, tool):
     if platform == "windows":
         return "\"build-tools/windows/{}/{}.exe\"".format(build_tools_directory, tool)
     return "\":{}_{}\"".format(tool, platform)
 
-def _platform_rules_for(rctx, platform, sdk):
+def _platform_rules_for(platform, sdk):
     build_tools_directory = sdk["build_tools_directory"]
     executable_extension = _PLATFORMS[platform]["executable_extension"]
     blocks = []
@@ -402,17 +404,17 @@ android_toolchain(
     translation_merger = ":fail",
 )
 """.format(
-        aapt = _platform_tool(platform, build_tools_directory, "aapt", executable_extension),
-        aapt2 = _platform_tool(platform, build_tools_directory, "aapt2", executable_extension),
+        aapt = _platform_tool(platform, build_tools_directory, "aapt"),
+        aapt2 = _platform_tool(platform, build_tools_directory, "aapt2"),
         adb = adb,
-        aidl = _platform_tool(platform, build_tools_directory, "aidl", executable_extension),
+        aidl = _platform_tool(platform, build_tools_directory, "aidl"),
         api_level = sdk["api_level"],
         build_tools_directory = build_tools_directory,
         build_tools_version = sdk["build_tools_version"],
-        dexdump = _platform_tool(platform, build_tools_directory, "dexdump", executable_extension),
+        dexdump = _platform_tool(platform, build_tools_directory, "dexdump"),
         platform = platform,
         sdk_name = sdk_name,
-        zipalign = _platform_tool(platform, build_tools_directory, "zipalign", executable_extension),
+        zipalign = _platform_tool(platform, build_tools_directory, "zipalign"),
     ))
 
     for constraint_name, constraints in _PLATFORMS[platform]["constraints"]:
@@ -490,8 +492,8 @@ alias(
 """.format(api_level = api_level))
     return "\n".join(blocks)
 
-def _platform_rules(rctx, sdk):
-    return "\n".join([_platform_rules_for(rctx, platform, sdk) for platform in sdk["platforms"]])
+def _platform_rules(sdk):
+    return "\n".join([_platform_rules_for(platform, sdk) for platform in sdk["platforms"]])
 
 def _tool_alias_label(platform, build_tools_directory, tool):
     if platform == "windows":
@@ -527,6 +529,15 @@ def _platform_select_alias(name, platforms, linux, darwin, windows):
     if "windows" in platforms:
         entries.append((":windows_x86_64_exec", windows))
     return _select_alias(name, entries)
+
+def _platform_condition(platform):
+    if platform == "linux":
+        return ":linux_x86_64_exec"
+    if platform == "darwin":
+        return ":darwin_exec"
+    if platform == "windows":
+        return ":windows_x86_64_exec"
+    fail("Unsupported platform {}.".format(repr(platform)))
 
 def _platform_aliases(sdk):
     platforms = sdk["platforms"]
@@ -612,6 +623,155 @@ def _platform_aliases(sdk):
     ]
     return "\n\n".join(blocks)
 
+def _sdk_for_platform(sdk, platform):
+    if platform not in sdk["platforms"]:
+        fail("Android SDK archives are not available for platform {}. Available platforms: [{}].".format(
+            repr(platform),
+            _format_platforms(sdk["platforms"]),
+        ))
+    platform_sdk = dict(sdk)
+    platform_sdk["platforms"] = [platform]
+    return platform_sdk
+
+def _local_core_for_system_modules_rule(api_level):
+    return """java_import(
+    name = "core-for-system-modules-jar",
+    jars = ["platforms/android-{api_level}/core-for-system-modules.jar"],
+)""".format(api_level = api_level)
+
+def _local_files_srcs(api_level):
+    return """[
+        "platforms/android-{api_level}/android.jar",
+        "platforms/android-{api_level}/core-for-system-modules.jar",
+        "platforms/android-{api_level}/framework.aidl",
+    ]""".format(api_level = api_level)
+
+def _local_sdk_path_rule():
+    return """filegroup(
+    name = "sdk_path",
+    srcs = ["."],
+)"""
+
+def _external_label(repository, target):
+    return "@{}//:{}".format(repository, target)
+
+def _platform_repository(rctx, platform):
+    if platform not in rctx.attr.platform_repositories:
+        fail("Missing platform repository for Android SDK platform {}. Got [{}].".format(
+            repr(platform),
+            _format_platforms(rctx.attr.platform_repositories.keys()),
+        ))
+    return rctx.attr.platform_repositories[platform]
+
+def _facade_label(rctx, platform, target):
+    return _external_label(_platform_repository(rctx, platform), target)
+
+def _facade_select_alias(rctx, sdk, name, target):
+    return _select_alias(name, [
+        (_platform_condition(platform), _facade_label(rctx, platform, target))
+        for platform in sdk["platforms"]
+    ])
+
+def _facade_platform_aliases(rctx, sdk):
+    blocks = [
+        _facade_select_alias(rctx, sdk, "aapt", "aapt"),
+        _facade_select_alias(rctx, sdk, "aapt2", "aapt2"),
+        _facade_select_alias(rctx, sdk, "aapt2_binary", "aapt2_binary"),
+        _facade_select_alias(rctx, sdk, "aidl", "aidl"),
+        _facade_select_alias(rctx, sdk, "adb", "adb"),
+        _facade_select_alias(rctx, sdk, "platform-tools/adb", "platform-tools/adb"),
+        _facade_select_alias(rctx, sdk, "apksigner", "apksigner"),
+        _facade_select_alias(rctx, sdk, "dexdump", "dexdump"),
+        _facade_select_alias(rctx, sdk, "main_dex_classes", "main_dex_classes"),
+        _facade_select_alias(rctx, sdk, "zipalign", "zipalign"),
+        _facade_select_alias(rctx, sdk, "zipalign_binary", "zipalign_binary"),
+    ]
+    return "\n\n".join(blocks)
+
+def _facade_platform_rules_for(rctx, platform, sdk):
+    repository = _platform_repository(rctx, platform)
+    sdk_name = "sdk_{}".format(platform)
+    build_tools_version = sdk["build_tools_version"]
+    blocks = []
+
+    blocks.append("""android_sdk(
+    name = "{sdk_name}",
+    aapt = "@{repository}//:aapt",
+    aapt2 = "@{repository}//:aapt2",
+    adb = "@{repository}//:adb",
+    aidl = "@{repository}//:aidl",
+    android_jar = "platforms/android-{api_level}/android.jar",
+    apksigner = "@{repository}//:apksigner",
+    build_tools_version = "{build_tools_version}",
+    dexdump = "@{repository}//:dexdump",
+    dx = ":d8_compat_dx",
+    framework_aidl = "platforms/android-{api_level}/framework.aidl",
+    legacy_main_dex_list_generator = ":generate_main_dex_list",
+    main_dex_classes = "@{repository}//:main_dex_classes",
+    main_dex_list_creator = ":main_dex_list_creator",
+    proguard = "@remote_java_tools//:proguard",
+    source_properties = "platforms/android-{api_level}/source.properties",
+    tags = ["__ANDROID_RULES_MIGRATION__"],
+    zipalign = "@{repository}//:zipalign",
+)
+
+android_toolchain(
+    name = "android_default_{platform}",
+    aapt2 = "@{repository}//:aapt2",
+    adb = "@{repository}//:adb",
+    android_archive_jar_optimization_inputs_validator = ":fail",
+    android_archive_packages_validator = ":fail",
+    apk_to_bundle_tool = ":fail",
+    centralize_r_class_tool = ":fail",
+    desugar_globals_jar = ":fail",
+    merge_baseline_profiles_tool = ":fail",
+    object_method_rewriter = ":fail",
+    profgen = ":fail",
+    proto_map_generator = ":fail",
+    translation_merger = ":fail",
+)
+""".format(
+        api_level = sdk["api_level"],
+        build_tools_version = build_tools_version,
+        platform = platform,
+        repository = repository,
+        sdk_name = sdk_name,
+    ))
+
+    for constraint_name, constraints in _PLATFORMS[platform]["constraints"]:
+        local_name = constraint_name if platform == "darwin" else platform
+        blocks.append("""toolchain(
+    name = "sdk_{local_name}_toolchain",
+    exec_compatible_with = {constraints},
+    toolchain = ":{sdk_name}",
+    toolchain_type = ":sdk_toolchain_type",
+)
+
+toolchain(
+    name = "rules_android_sdk_{local_name}_toolchain",
+    exec_compatible_with = {constraints},
+    toolchain = ":{sdk_name}",
+    toolchain_type = "@rules_android//toolchains/android_sdk:toolchain_type",
+)
+
+toolchain(
+    name = "android_default_{local_name}_toolchain",
+    exec_compatible_with = {constraints},
+    toolchain = ":android_default_{platform}",
+    toolchain_type = "@rules_android//toolchains/android:toolchain_type",
+)
+""".format(
+            constraints = repr(constraints),
+            platform = platform,
+            local_name = local_name,
+            sdk_name = sdk_name,
+        ))
+
+    return "\n".join(blocks)
+
+def _facade_platform_rules(rctx, sdk):
+    return "\n".join([_facade_platform_rules_for(rctx, platform, sdk) for platform in sdk["platforms"]])
+
 def _write_runner_scripts(rctx, sdk):
     for platform in sdk["platforms"]:
         if platform == "windows":
@@ -625,14 +785,14 @@ def _write_runner_scripts(rctx, sdk):
                 executable = True,
             )
 
-def _hermetic_android_sdk_repository_impl(rctx):
+def _hermetic_android_sdk_platform_repository_impl(rctx):
     if not rctx.attr.version:
-        fail("hermetic_android_sdk_repository requires version.")
+        fail("hermetic_android_sdk_platform_repository requires version.")
     if not rctx.attr.build_tools_version:
-        fail("hermetic_android_sdk_repository requires build_tools_version.")
+        fail("hermetic_android_sdk_platform_repository requires build_tools_version.")
 
     _require_license(rctx)
-    sdk = _resolve_sdk(rctx)
+    sdk = _sdk_for_platform(_resolve_sdk(rctx), rctx.attr.platform)
     _download_sdk(rctx, sdk)
     _write_runner_scripts(rctx, sdk)
 
@@ -642,10 +802,80 @@ def _hermetic_android_sdk_repository_impl(rctx):
         Label("//sdk:BUILD.androidsdk.tpl"),
         substitutions = {
             "%{api_level}": sdk["api_level"],
+            "%{android_jar}": "\"platforms/android-{}/android.jar\"".format(sdk["api_level"]),
             "%{build_tools_directory}": sdk["build_tools_directory"],
             "%{build_tools_version}": sdk["build_tools_version"],
+            "%{core_for_system_modules_rule}": _local_core_for_system_modules_rule(sdk["api_level"]),
+            "%{files_srcs}": _local_files_srcs(sdk["api_level"]),
+            "%{framework_aidl}": "\"platforms/android-{}/framework.aidl\"".format(sdk["api_level"]),
             "%{platform_aliases}": _platform_aliases(sdk),
-            "%{platform_rules}": _platform_rules(rctx, sdk),
+            "%{platform_rules}": _platform_rules(sdk),
+            "%{sdk_path_rule}": _local_sdk_path_rule(),
+            "%{source_properties}": "\"platforms/android-{}/source.properties\"".format(sdk["api_level"]),
+            "%{optional_java_imports}": _optional_java_imports(sdk["api_level"]),
+        },
+    )
+
+    if hasattr(rctx, "repo_metadata"):
+        return rctx.repo_metadata(reproducible = True)
+    return None
+
+hermetic_android_sdk_platform_repository = repository_rule(
+    implementation = _hermetic_android_sdk_platform_repository_impl,
+    attrs = {
+        "api_level": attr.string(),
+        "build_tools_directory": attr.string(),
+        "build_tools_sha256s": attr.string_dict(),
+        "build_tools_strip_prefixes": attr.string_dict(),
+        "build_tools_urls": attr.string_dict(),
+        "build_tools_version": attr.string(mandatory = True),
+        "platform_tools_sha256s": attr.string_dict(),
+        "platform_tools_urls": attr.string_dict(),
+        "platforms_sha256": attr.string(),
+        "platforms_strip_prefix": attr.string(),
+        "platforms_url": attr.string(),
+        "platform": attr.string(mandatory = True, values = SDK_PLATFORMS),
+        "version": attr.string(mandatory = True),
+        "_versions_json": attr.label(
+            default = SDK_VERSIONS,
+            allow_single_file = True,
+        ),
+    },
+    environ = [ANDROID_SDK_LICENSE_ENV],
+)
+
+def _hermetic_android_sdk_repository_impl(rctx):
+    if not rctx.attr.version:
+        fail("hermetic_android_sdk_repository requires version.")
+    if not rctx.attr.build_tools_version:
+        fail("hermetic_android_sdk_repository requires build_tools_version.")
+
+    _require_license(rctx)
+    sdk = _resolve_sdk(rctx)
+    _download_component(
+        rctx,
+        url = sdk["platforms_url"],
+        sha256 = sdk["platforms_sha256"],
+        output = "platforms",
+        strip_prefix = sdk["platforms_strip_prefix"],
+    )
+
+    rctx.symlink(Label("@rules_android//rules/android_sdk_repository:helper.bzl"), "helper.bzl")
+    rctx.template(
+        "BUILD.bazel",
+        Label("//sdk:BUILD.androidsdk.tpl"),
+        substitutions = {
+            "%{api_level}": sdk["api_level"],
+            "%{android_jar}": "\"platforms/android-{}/android.jar\"".format(sdk["api_level"]),
+            "%{build_tools_directory}": sdk["build_tools_directory"],
+            "%{build_tools_version}": sdk["build_tools_version"],
+            "%{core_for_system_modules_rule}": _local_core_for_system_modules_rule(sdk["api_level"]),
+            "%{files_srcs}": _local_files_srcs(sdk["api_level"]),
+            "%{framework_aidl}": "\"platforms/android-{}/framework.aidl\"".format(sdk["api_level"]),
+            "%{platform_aliases}": _facade_platform_aliases(rctx, sdk),
+            "%{platform_rules}": _facade_platform_rules(rctx, sdk),
+            "%{sdk_path_rule}": _local_sdk_path_rule(),
+            "%{source_properties}": "\"platforms/android-{}/source.properties\"".format(sdk["api_level"]),
             "%{optional_java_imports}": _optional_java_imports(sdk["api_level"]),
         },
     )
@@ -663,6 +893,7 @@ hermetic_android_sdk_repository = repository_rule(
         "build_tools_strip_prefixes": attr.string_dict(),
         "build_tools_urls": attr.string_dict(),
         "build_tools_version": attr.string(mandatory = True),
+        "platform_repositories": attr.string_dict(mandatory = True),
         "platform_tools_sha256s": attr.string_dict(),
         "platform_tools_urls": attr.string_dict(),
         "platforms_sha256": attr.string(),

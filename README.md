@@ -105,7 +105,7 @@ to find it by adding this to your `.bazelrc`:
 
 ```
 common --enable_platform_specific_config
-mobile-install:linux --adb=external/+android+androidsdk/platform-tools/linux/adb
-mobile-install:macos --adb=external/+android+androidsdk/platform-tools/darwin/adb
-mobile-install:windows --adb=external/+android+androidsdk/platform-tools/windows/adb.exe
+mobile-install:linux --adb=external/+android+androidsdk_linux/platform-tools/linux/adb
+mobile-install:macos --adb=external/+android+androidsdk_darwin/platform-tools/darwin/adb
+mobile-install:windows --adb=external/+android+androidsdk_windows/platform-tools/windows/adb.exe
 ```

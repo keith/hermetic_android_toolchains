@@ -78,10 +78,7 @@ alias(
 
 %{optional_java_imports}
 
-java_import(
-    name = "core-for-system-modules-jar",
-    jars = ["platforms/android-%{api_level}/core-for-system-modules.jar"],
-)
+%{core_for_system_modules_rule}
 
 java_binary(
     name = "d8_compat_dx",
@@ -165,17 +162,17 @@ android_sdk(
     aapt2 = ":aapt2",
     adb = ":adb",
     aidl = ":aidl",
-    android_jar = "platforms/android-%{api_level}/android.jar",
+    android_jar = %{android_jar},
     apksigner = ":apksigner",
     build_tools_version = "%{build_tools_version}",
     dexdump = ":dexdump",
     dx = ":d8_compat_dx",
-    framework_aidl = "platforms/android-%{api_level}/framework.aidl",
+    framework_aidl = %{framework_aidl},
     legacy_main_dex_list_generator = ":generate_main_dex_list",
     main_dex_classes = ":main_dex_classes",
     main_dex_list_creator = ":main_dex_list_creator",
     proguard = "@remote_java_tools//:proguard",
-    source_properties = "platforms/android-%{api_level}/source.properties",
+    source_properties = %{source_properties},
     tags = [
         "__ANDROID_RULES_MIGRATION__",
         "manual",
@@ -194,14 +191,7 @@ toolchain(
 
 filegroup(
     name = "files",
-    srcs = [
-        "platforms/android-%{api_level}/android.jar",
-        "platforms/android-%{api_level}/core-for-system-modules.jar",
-        "platforms/android-%{api_level}/framework.aidl",
-    ],
+    srcs = %{files_srcs},
 )
 
-filegroup(
-    name = "sdk_path",
-    srcs = ["."],
-)
+%{sdk_path_rule}
