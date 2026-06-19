@@ -13,7 +13,10 @@ Setup docs: https://github.com/keith/hermetic_android_toolchains#usage
 bazel_dep(name = "hermetic_android_toolchains", version = "$new_version")
 
 android = use_extension("@hermetic_android_toolchains//:extensions.bzl", "android")
-android.sdk(version = "35")
+android.sdk(
+    version = "35",
+    build_tools_version = "35.0.0",
+)
 android.ndk(version = "r25c")
 use_repo(android, "androidsdk", "androidndk")
 

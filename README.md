@@ -15,7 +15,10 @@ bazel_dep(name = "hermetic_android_toolchains", version = "0.0.0")
 bazel_dep(name = "rules_android", version = "0.7.3")
 
 android = use_extension("@hermetic_android_toolchains//:extensions.bzl", "android")
-android.sdk(version = "35")
+android.sdk(
+    version = "35",
+    build_tools_version = "35.0.0",
+)
 android.ndk(version = "r25c")
 use_repo(android, "androidsdk", "androidndk")
 
@@ -34,8 +37,9 @@ common --repo_env=ACCEPTED_ANDROID_SDK_LICENSE_VERSION=35
 common --repo_env=ACCEPTED_ANDROID_NDK_LICENSE_VERSION=r25c
 ```
 
-Use `android.ndk(api_level = ...)` to specify a different API level for
-the NDK.
+SDK, build-tools, and NDK versions are explicit. Use
+`android.ndk(version = "r25c", api_level = ...)` to specify a different
+API level for the NDK.
 
 ## Specifying versions
 
