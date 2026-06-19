@@ -62,27 +62,6 @@
         }
       }
     },
-    "emulator": {
-      "36.6.11": {
-        "archives": {
-          "darwin": {
-            "file": "emulator-darwin_x64-15507667.zip",
-            "sha256": "1a2858a641c727ca587164851c2cbb91814b3214a4b33724a3e08d995a42b92d",
-            "strip_prefix": "emulator"
-          },
-          "linux": {
-            "file": "emulator-linux_x64-15507667.zip",
-            "sha256": "1eade4cf2df6ea8eeead4902c635897ba12aaa32aac4389eaae0fdb498a5b830",
-            "strip_prefix": "emulator"
-          },
-          "windows": {
-            "file": "emulator-windows_x64-15507667.zip",
-            "sha256": "7dfb2c47291db7e0fd7ce45e541706d45827bc9875f5f736bf785585b549e0e4",
-            "strip_prefix": "emulator"
-          }
-        }
-      }
-    },
     "platform_tools": {
       "37.0.0": {
         "archives": {
@@ -103,24 +82,13 @@
           }
         }
       }
-    },
-    "system_images": {
-      "android-28/default/x86": {
-        "file": "sys-img/android/x86-28_r04.zip",
-        "sha256": "7c3615c55b64713fe56842a12fe6827d6792cb27a9f95f9fa3aee1ff1be47f16",
-        "strip_prefix": "x86"
-      }
     }
   },
   "versions": {
     "31": {
       "api_level": "31",
       "build_tools_version": "35.0.0",
-      "emulator_version": "36.6.11",
       "platform_tools_version": "37.0.0",
-      "system_images": [
-        "android-28/default/x86"
-      ],
       "platform": {
         "file": "platform-31_r01.zip",
         "sha256": "1d69fe1d7f9788d82ff3a374faf4f6ccc9d1d372aa84a86b5bcfb517523b0b3f"
@@ -129,11 +97,7 @@
     "32": {
       "api_level": "32",
       "build_tools_version": "35.0.0",
-      "emulator_version": "36.6.11",
       "platform_tools_version": "37.0.0",
-      "system_images": [
-        "android-28/default/x86"
-      ],
       "platform": {
         "file": "platform-32_r01.zip",
         "sha256": "01d8da1c900e70fcf5da39767d5444e39928935b1a5927055ce749fc348ca7ae"
@@ -142,11 +106,7 @@
     "33": {
       "api_level": "33",
       "build_tools_version": "35.0.0",
-      "emulator_version": "36.6.11",
       "platform_tools_version": "37.0.0",
-      "system_images": [
-        "android-28/default/x86"
-      ],
       "platform": {
         "file": "platform-33-ext3_r03.zip",
         "sha256": "b32b10f787867987f03ae8e101d217e053a9065b7136379fb353b388379aed1d"
@@ -155,11 +115,7 @@
     "34": {
       "api_level": "34",
       "build_tools_version": "35.0.0",
-      "emulator_version": "36.6.11",
       "platform_tools_version": "37.0.0",
-      "system_images": [
-        "android-28/default/x86"
-      ],
       "platform": {
         "file": "platform-34-ext7_r03.zip",
         "sha256": "16fdb74c55e59ae3ef52def135aec713508467bd56d7dabcd8c9be31fa8b20f3"
@@ -168,11 +124,7 @@
     "35": {
       "api_level": "35",
       "build_tools_version": "35.0.0",
-      "emulator_version": "36.6.11",
       "platform_tools_version": "37.0.0",
-      "system_images": [
-        "android-28/default/x86"
-      ],
       "platform": {
         "file": "platform-35_r02.zip",
         "sha256": "0988cacad01b38a18a47bac14a0695f246bc76c1b06c0eeb8eb0dc825ab0c8e0"
@@ -181,11 +133,7 @@
     "36": {
       "api_level": "36",
       "build_tools_version": "36.0.0",
-      "emulator_version": "36.6.11",
       "platform_tools_version": "37.0.0",
-      "system_images": [
-        "android-28/default/x86"
-      ],
       "platform": {
         "file": "platform-36_r02.zip",
         "sha256": "37607369a28c5b640b3a7998868d45898ebcb777565a0e85f9acf36f29631d2e"
@@ -194,11 +142,7 @@
     "37.0": {
       "api_level": "37.0",
       "build_tools_version": "37.0.0",
-      "emulator_version": "36.6.11",
       "platform_tools_version": "37.0.0",
-      "system_images": [
-        "android-28/default/x86"
-      ],
       "platform": {
         "file": "platform-37.0_r02.zip",
         "sha256": "840b23e827f96e64aea4c89a1194aac3dc5f6bad37edb231c5c795d890330e8d"
