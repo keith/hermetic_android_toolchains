@@ -38,15 +38,6 @@ action_command_line_test(
 build_test(
     name = "valid_labels_build_test",
     targets = [
-        "@androidsdk//:emulator",
-        "@androidsdk//:emulator_arm",
-        "@androidsdk//:emulator_images_android_28_x86",
-        "@androidsdk//:emulator_images_android_28_x86_qemu2_extra",
-        "@androidsdk//:emulator_shared_libs",
-        "@androidsdk//:emulator_x86",
-        "@androidsdk//:emulator_x86_bios",
-        "@androidsdk//:mksd",
-        "@androidsdk//:qemu2_x86",
         "@androidsdk//:aapt2_binary",
         "@androidsdk//:platform-tools/adb",
         "@androidsdk//:sdk-toolchain",

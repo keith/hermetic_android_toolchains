@@ -63,21 +63,6 @@ android.sdk(
         "darwin": "...",
         "windows": "...",
     },
-    emulator_urls = {
-        "linux": "https://mirror.example/emulator-linux.zip",
-        "darwin": "https://mirror.example/emulator-darwin.zip",
-        "windows": "https://mirror.example/emulator-windows.zip",
-    },
-    emulator_sha256s = {
-        "linux": "...",
-        "darwin": "...",
-        "windows": "...",
-    },
-    emulator_strip_prefixes = {
-        "linux": "emulator",
-        "darwin": "emulator",
-        "windows": "emulator",
-    },
     platform_tools_urls = {
         "linux": "https://mirror.example/platform-tools-linux.zip",
         "darwin": "https://mirror.example/platform-tools-darwin.zip",
@@ -90,15 +75,6 @@ android.sdk(
     },
     platforms_url = "https://mirror.example/platform-35.zip",
     platforms_sha256 = "...",
-    system_image_urls = {
-        "android-28/default/x86": "https://mirror.example/x86-28.zip",
-    },
-    system_image_sha256s = {
-        "android-28/default/x86": "...",
-    },
-    system_image_strip_prefixes = {
-        "android-28/default/x86": "x86",
-    },
 )
 
 android.ndk(
