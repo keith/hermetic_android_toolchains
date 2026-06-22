@@ -111,6 +111,4 @@ android = module_extension(
         "ndk": NDK_TAG,
         "sdk": SDK_TAG,
     },
-    os_dependent = False,
-    arch_dependent = False,
 )
