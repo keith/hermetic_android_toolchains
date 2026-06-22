@@ -1,6 +1,5 @@
 """Repository rule for downloading a hermetic Android NDK."""
 
-load("//ndk:versions.bzl", "DEFAULT_API_LEVEL", "NDK_VERSIONS")
 load(
     "//private:utils.bzl",
     "ANDROID_PLATFORMS",
@@ -16,6 +15,9 @@ load(
 )
 
 ANDROID_NDK_LICENSE_ENV = "ACCEPTED_ANDROID_NDK_LICENSE_VERSION"
+
+# TODO: When rules_android_ndk releases, import their default
+DEFAULT_API_LEVEL = 31
 
 NDK_TAG = tag_class(attrs = {
     "version": attr.string(
@@ -295,7 +297,7 @@ hermetic_android_ndk_platform_repository = repository_rule(
             allow_single_file = True,
         ),
         "_versions_json": attr.label(
-            default = NDK_VERSIONS,
+            default = Label("//ndk:versions.json"),
             allow_single_file = True,
         ),
     },
@@ -338,7 +340,7 @@ hermetic_android_ndk_repository = repository_rule(
             allow_single_file = True,
         ),
         "_versions_json": attr.label(
-            default = NDK_VERSIONS,
+            default = Label("//ndk:versions.json"),
             allow_single_file = True,
         ),
     },
