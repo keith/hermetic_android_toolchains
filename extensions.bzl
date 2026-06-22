@@ -3,15 +3,14 @@
 load(
     "//ndk:repositories.bzl",
     "ANDROID_NDK_LICENSE_ENV",
-    "NDK_PLATFORMS",
     "NDK_TAG",
     "hermetic_android_ndk_platform_repository",
     "hermetic_android_ndk_repository",
 )
+load("//private:utils.bzl", "ANDROID_PLATFORMS")
 load(
     "//sdk:repositories.bzl",
     "ANDROID_SDK_LICENSE_ENV",
-    "SDK_PLATFORMS",
     "SDK_TAG",
     "hermetic_android_sdk_platform_repository",
     "hermetic_android_sdk_repository",
@@ -71,7 +70,7 @@ def _android_impl(module_ctx):
     ndk = _ndk_kwargs(_single_root_tag(module_ctx, "ndk"))
 
     sdk_platform_repositories = {}
-    for platform in SDK_PLATFORMS:
+    for platform in sorted(ANDROID_PLATFORMS.keys()):
         name = "androidsdk_{}".format(platform)
         hermetic_android_sdk_platform_repository(
             name = name,
@@ -86,7 +85,7 @@ def _android_impl(module_ctx):
     )
 
     ndk_platform_repositories = {}
-    for platform in NDK_PLATFORMS:
+    for platform in sorted(ANDROID_PLATFORMS.keys()):
         name = "androidndk_{}".format(platform)
         hermetic_android_ndk_platform_repository(
             name = name,
