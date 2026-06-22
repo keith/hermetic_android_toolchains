@@ -547,25 +547,6 @@ def _sdk_for_platform(sdk, platform):
     platform_sdk["platforms"] = [platform]
     return platform_sdk
 
-def _local_core_for_system_modules_rule(api_level):
-    return """java_import(
-    name = "core-for-system-modules-jar",
-    jars = ["platforms/android-{api_level}/core-for-system-modules.jar"],
-)""".format(api_level = api_level)
-
-def _local_files_srcs(api_level):
-    return """[
-        "platforms/android-{api_level}/android.jar",
-        "platforms/android-{api_level}/core-for-system-modules.jar",
-        "platforms/android-{api_level}/framework.aidl",
-    ]""".format(api_level = api_level)
-
-def _local_sdk_path_rule():
-    return """filegroup(
-    name = "sdk_path",
-    srcs = ["."],
-)"""
-
 def _facade_select_alias(rctx, sdk, name, target):
     return _select_alias(name, [
         (_platform_condition(platform), _external_label(_platform_repository(rctx, platform, "SDK"), target))
@@ -702,16 +683,10 @@ def _hermetic_android_sdk_platform_repository_impl(rctx):
         Label("//sdk:BUILD.androidsdk.tpl"),
         substitutions = {
             "%{api_level}": sdk["api_level"],
-            "%{android_jar}": "\"platforms/android-{}/android.jar\"".format(sdk["api_level"]),
             "%{build_tools_directory}": sdk["build_tools_directory"],
             "%{build_tools_version}": sdk["build_tools_version"],
-            "%{core_for_system_modules_rule}": _local_core_for_system_modules_rule(sdk["api_level"]),
-            "%{files_srcs}": _local_files_srcs(sdk["api_level"]),
-            "%{framework_aidl}": "\"platforms/android-{}/framework.aidl\"".format(sdk["api_level"]),
             "%{platform_aliases}": _platform_aliases(sdk),
             "%{platform_rules}": _platform_rules(sdk),
-            "%{sdk_path_rule}": _local_sdk_path_rule(),
-            "%{source_properties}": "\"platforms/android-{}/source.properties\"".format(sdk["api_level"]),
             "%{optional_java_imports}": _optional_java_imports(sdk["api_level"]),
         },
     )
@@ -766,16 +741,10 @@ def _hermetic_android_sdk_repository_impl(rctx):
         Label("//sdk:BUILD.androidsdk.tpl"),
         substitutions = {
             "%{api_level}": sdk["api_level"],
-            "%{android_jar}": "\"platforms/android-{}/android.jar\"".format(sdk["api_level"]),
             "%{build_tools_directory}": sdk["build_tools_directory"],
             "%{build_tools_version}": sdk["build_tools_version"],
-            "%{core_for_system_modules_rule}": _local_core_for_system_modules_rule(sdk["api_level"]),
-            "%{files_srcs}": _local_files_srcs(sdk["api_level"]),
-            "%{framework_aidl}": "\"platforms/android-{}/framework.aidl\"".format(sdk["api_level"]),
             "%{platform_aliases}": _facade_platform_aliases(rctx, sdk),
             "%{platform_rules}": _facade_platform_rules(rctx, sdk),
-            "%{sdk_path_rule}": _local_sdk_path_rule(),
-            "%{source_properties}": "\"platforms/android-{}/source.properties\"".format(sdk["api_level"]),
             "%{optional_java_imports}": _optional_java_imports(sdk["api_level"]),
         },
     )
