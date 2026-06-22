@@ -4,6 +4,7 @@ load(
     ":helper.bzl",
     "string_flag",
 )
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 load("@rules_android//rules:rules.bzl", "android_sdk")
 load("@rules_android//toolchains/android:toolchain.bzl", "android_toolchain")
 load("@rules_java//java:defs.bzl", "java_binary", "java_import")
@@ -31,10 +32,23 @@ config_feature_flag(
 
 config_setting(
     name = "always_true",
-    flag_values = {
-        ":true": "true",
-    },
+    flag_values = {":true": "true"},
     visibility = ["//visibility:private"],
+)
+
+config_setting(
+    name = "dx_standalone_dexer",
+    values = {"define": "android_standalone_dexing_tool=dx_compat_dx"},
+)
+
+bool_flag(
+    name = "allow_proguard",
+    build_setting_default = True,
+)
+
+config_setting(
+    name = "disallow_proguard",
+    flag_values = {":allow_proguard": "false"},
 )
 
 config_setting(
@@ -141,20 +155,35 @@ alias(
 
 android_sdk(
     name = "sdk",
-    aapt = ":aapt",
+    aapt = select({
+        "@platforms//os:windows": ":aapt",
+        "//conditions:default": ":aapt_binary",
+    }),
     aapt2 = ":aapt2",
-    adb = ":adb",
-    aidl = ":aidl",
+    adb = select({
+        "@platforms//os:windows": ":adb",
+        "//conditions:default": ":platform-tools/adb",
+    }),
+    aidl = select({
+        "@platforms//os:windows": ":aidl",
+        "//conditions:default": ":aidl_binary",
+    }),
     android_jar = "platforms/android-%{api_level}/android.jar",
     apksigner = ":apksigner",
     build_tools_version = "%{build_tools_version}",
     dexdump = ":dexdump",
-    dx = ":d8_compat_dx",
+    dx = select({
+        ":dx_standalone_dexer": ":fail",
+        "//conditions:default": ":d8_compat_dx",
+    }),
     framework_aidl = "platforms/android-%{api_level}/framework.aidl",
     legacy_main_dex_list_generator = ":generate_main_dex_list",
     main_dex_classes = ":main_dex_classes",
     main_dex_list_creator = ":main_dex_list_creator",
-    proguard = "@remote_java_tools//:proguard",
+    proguard = select({
+        ":disallow_proguard": ":fail",
+        "//conditions:default": "@remote_java_tools//:proguard",
+    }),
     source_properties = "platforms/android-%{api_level}/source.properties",
     tags = [
         "__ANDROID_RULES_MIGRATION__",
