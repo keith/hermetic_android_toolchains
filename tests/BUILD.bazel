@@ -1,5 +1,16 @@
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@rules_python//python:defs.bzl", "py_test")
 load("//tests:action_command_line_test.bzl", "action_command_line_test")
+
+py_test(
+    name = "sdk_versions_sha256_test",
+    srcs = ["sdk_versions_sha256_test.py"],
+    args = ["$(location //sdk:versions.json)"],
+    data = [
+        "//sdk:versions.json",
+    ],
+    tags = ["manual"],
+)
 
 action_command_line_test(
     name = "cc_compile_uses_hermetic_ndk_test",
