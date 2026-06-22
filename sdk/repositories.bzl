@@ -195,7 +195,7 @@ def _download_component(rctx, url, sha256, output, strip_prefix = ""):
         kwargs["stripPrefix"] = strip_prefix
     rctx.download_and_extract(**kwargs)
 
-def _download_sdk(rctx, sdk):
+def _download_sdk_platform_tools(rctx, sdk):
     for platform in sdk["platforms"]:
         if platform not in sdk["build_tools_urls"] or platform not in sdk["build_tools_sha256s"]:
             fail("Missing build-tools archive for resolved platform {}.".format(platform))
@@ -216,14 +216,6 @@ def _download_sdk(rctx, sdk):
             output = "platform-tools/{}".format(platform),
             strip_prefix = sdk["platform_tools_strip_prefixes"].get(platform, ""),
         )
-
-    _download_component(
-        rctx,
-        url = sdk["platforms_url"],
-        sha256 = sdk["platforms_sha256"],
-        output = "platforms",
-        strip_prefix = sdk["platforms_strip_prefix"],
-    )
 
 def _runner_script_content(rctx, name, platform, build_tools_directory, executable_extension):
     tool = "{}{}".format(name, executable_extension)
@@ -249,51 +241,93 @@ exec env \\
     )
 
 def _script_runner(name, platform, build_tools_directory):
-    tool_path = "build-tools/{}/{}/{}".format(platform, build_tools_directory, name)
+    executable_extension = ANDROID_PLATFORMS[platform]["executable_extension"]
+    tool_path = "build-tools/{}/{}/{}{}".format(platform, build_tools_directory, name, executable_extension)
     return """sh_binary(
-    name = "{name}_{platform}",
+    name = "{name}_binary",
     srcs = ["tools/{name}_{platform}.sh"],
     data = [
         "{tool_path}",
-        ":build_tools_libs_{platform}",
+        ":build_tools_libs",
     ],
 )
 """.format(
-        platform = platform,
         name = name,
+        platform = platform,
         tool_path = tool_path,
     )
 
-def _platform_tool(platform, build_tools_directory, tool):
-    if platform == "windows":
-        return "\"build-tools/windows/{}/{}.exe\"".format(build_tools_directory, tool)
-    if tool == "dexdump":
-        return "\"build-tools/{}/{}/{}\"".format(platform, build_tools_directory, tool)
-    return "\":{}_{}\"".format(tool, platform)
+def _platform_files(platform, sdk):
+    build_tools_directory = sdk["build_tools_directory"]
+    build_tools_major_version = int(sdk["build_tools_version"].split(".")[0])
+    executable_extension = ANDROID_PLATFORMS[platform]["executable_extension"]
+    base_srcs = [
+        "build-tools/{platform}/{build_tools_directory}/lib/apksigner.jar",
+        "build-tools/{platform}/{build_tools_directory}/lib/d8.jar",
+        ":build_tools_libs",
+        "@androidsdk//:platforms/android-{api_level}/android.jar",
+        "@androidsdk//:platforms/android-{api_level}/core-for-system-modules.jar",
+        "@androidsdk//:platforms/android-{api_level}/framework.aidl",
+    ]
+    if build_tools_major_version <= 30:
+        base_srcs = [
+            "build-tools/{platform}/{build_tools_directory}/lib/dx.jar",
+            "build-tools/{platform}/{build_tools_directory}/mainDexClasses.rules",
+        ] + base_srcs
+
+    srcs = base_srcs + [
+        "build-tools/{platform}/{build_tools_directory}/aapt{executable_extension}",
+        "build-tools/{platform}/{build_tools_directory}/aapt2{executable_extension}",
+        "build-tools/{platform}/{build_tools_directory}/aidl{executable_extension}",
+        "build-tools/{platform}/{build_tools_directory}/dexdump{executable_extension}",
+        "build-tools/{platform}/{build_tools_directory}/zipalign{executable_extension}",
+        "platform-tools/{platform}/adb{executable_extension}",
+    ]
+    return """filegroup(
+    name = "files",
+    srcs = [
+{srcs}
+    ],
+)
+""".format(
+        srcs = "\n".join([
+            "        \"{}\",".format(src.format(
+                api_level = sdk["api_level"],
+                build_tools_directory = build_tools_directory,
+                executable_extension = executable_extension,
+                platform = platform,
+            ))
+            for src in srcs
+        ]),
+    )
 
 def _platform_rules_for(platform, sdk):
     build_tools_directory = sdk["build_tools_directory"]
-    executable_extension = ANDROID_PLATFORMS[platform]["executable_extension"]
     blocks = []
 
     blocks.append("""filegroup(
-    name = "build_tools_libs_{platform}",
+    name = "build_tools_libs",
     srcs = glob([
         "build-tools/{platform}/{build_tools_directory}/lib/**",
         "build-tools/{platform}/{build_tools_directory}/lib64/**",
-    ], allow_empty = True),
+    ]),
 )
 """.format(
         build_tools_directory = build_tools_directory,
         platform = platform,
     ))
 
-    if platform != "windows":
-        for tool in ["aapt", "aapt2", "aidl", "zipalign"]:
-            blocks.append(_script_runner(tool, platform, build_tools_directory))
+    blocks.append(_platform_files(platform, sdk))
+
+    blocks.extend([
+        _script_runner("aapt", platform, build_tools_directory),
+        _script_runner("aapt2", platform, build_tools_directory),
+        _script_runner("aidl", platform, build_tools_directory),
+        _script_runner("zipalign", platform, build_tools_directory),
+    ])
 
     blocks.append("""java_binary(
-    name = "apksigner_{platform}",
+    name = "apksigner",
     main_class = "com.android.apksigner.ApkSignerTool",
     runtime_deps = ["build-tools/{platform}/{build_tools_directory}/lib/apksigner.jar"],
 )
@@ -301,91 +335,6 @@ def _platform_rules_for(platform, sdk):
         build_tools_directory = build_tools_directory,
         platform = platform,
     ))
-
-    sdk_name = "sdk_{}".format(platform)
-    adb = "\"platform-tools/{}/adb{}\"".format(platform, executable_extension)
-    blocks.append("""android_sdk(
-    name = "{sdk_name}",
-    aapt = {aapt},
-    aapt2 = {aapt2},
-    adb = {adb},
-    aidl = {aidl},
-    android_jar = "platforms/android-{api_level}/android.jar",
-    apksigner = ":apksigner_{platform}",
-    build_tools_version = "{build_tools_version}",
-    dexdump = {dexdump},
-    dx = ":d8_compat_dx",
-    framework_aidl = "platforms/android-{api_level}/framework.aidl",
-    legacy_main_dex_list_generator = ":generate_main_dex_list",
-    main_dex_classes = "build-tools/{platform}/{build_tools_directory}/mainDexClasses.rules",
-    main_dex_list_creator = ":main_dex_list_creator",
-    proguard = "@remote_java_tools//:proguard",
-    source_properties = "platforms/android-{api_level}/source.properties",
-    tags = [
-        "__ANDROID_RULES_MIGRATION__",
-        "manual",
-    ],
-    zipalign = {zipalign},
-)
-
-android_toolchain(
-    name = "android_default_{platform}",
-    aapt2 = {aapt2},
-    adb = {adb},
-    android_archive_jar_optimization_inputs_validator = ":fail",
-    android_archive_packages_validator = ":fail",
-    apk_to_bundle_tool = ":fail",
-    centralize_r_class_tool = ":fail",
-    desugar_globals_jar = ":fail",
-    merge_baseline_profiles_tool = ":fail",
-    object_method_rewriter = ":fail",
-    profgen = ":fail",
-    proto_map_generator = ":fail",
-    tags = ["manual"],
-    translation_merger = ":fail",
-)
-""".format(
-        aapt = _platform_tool(platform, build_tools_directory, "aapt"),
-        aapt2 = _platform_tool(platform, build_tools_directory, "aapt2"),
-        adb = adb,
-        aidl = _platform_tool(platform, build_tools_directory, "aidl"),
-        api_level = sdk["api_level"],
-        build_tools_directory = build_tools_directory,
-        build_tools_version = sdk["build_tools_version"],
-        dexdump = _platform_tool(platform, build_tools_directory, "dexdump"),
-        platform = platform,
-        sdk_name = sdk_name,
-        zipalign = _platform_tool(platform, build_tools_directory, "zipalign"),
-    ))
-
-    for constraint_name, constraints in ANDROID_PLATFORMS[platform]["constraints"]:
-        local_name = constraint_name if platform == "darwin" else platform
-        blocks.append("""toolchain(
-    name = "sdk_{local_name}_toolchain",
-    exec_compatible_with = {constraints},
-    toolchain = ":{sdk_name}",
-    toolchain_type = ":sdk_toolchain_type",
-)
-
-toolchain(
-    name = "rules_android_sdk_{local_name}_toolchain",
-    exec_compatible_with = {constraints},
-    toolchain = ":{sdk_name}",
-    toolchain_type = "@rules_android//toolchains/android_sdk:toolchain_type",
-)
-
-toolchain(
-    name = "android_default_{local_name}_toolchain",
-    exec_compatible_with = {constraints},
-    toolchain = ":android_default_{platform}",
-    toolchain_type = "@rules_android//toolchains/android:toolchain_type",
-)
-""".format(
-            constraints = repr(constraints),
-            platform = platform,
-            local_name = local_name,
-            sdk_name = sdk_name,
-        ))
 
     return "\n".join(blocks)
 
@@ -413,11 +362,6 @@ alias(
     ],
     neverlink = True,
 )
-
-alias(
-    name = "legacy_test",
-    actual = ":legacy_test-{api_level}",
-)
 """.format(api_level = api_level))
     if major >= 29:
         blocks.append("""java_import(
@@ -441,22 +385,14 @@ def _tool_alias_label(platform, build_tools_directory, tool):
         return "build-tools/windows/{}/{}.exe".format(build_tools_directory, tool)
     if tool == "dexdump":
         return "build-tools/{}/{}/{}".format(platform, build_tools_directory, tool)
+    if tool in ["aapt", "aapt2", "aidl", "zipalign"]:
+        return ":{}_binary".format(tool)
     return ":{}_{}".format(tool, platform)
 
 def _adb_alias_label(platform):
     if platform == "windows":
         return "platform-tools/windows/adb.exe"
     return "platform-tools/{}/adb".format(platform)
-
-def _platform_select_alias(name, platforms, linux, darwin, windows):
-    entries = []
-    if "linux" in platforms:
-        entries.append((platform_condition("linux"), linux))
-    if "darwin" in platforms:
-        entries.append((platform_condition("darwin"), darwin))
-    if "windows" in platforms:
-        entries.append((platform_condition("windows"), windows))
-    return select_alias(name, entries, tags = ["manual"])
 
 def _plain_alias(name, actual, tags = None):
     lines = [
@@ -469,87 +405,57 @@ def _plain_alias(name, actual, tags = None):
     lines.append(")")
     return "\n".join(lines)
 
-def _platform_aliases(sdk):
-    platforms = sdk["platforms"]
-    build_tools_directory = sdk["build_tools_directory"]
-    blocks = [
-        _platform_select_alias(
+def _platform_direct_aliases(platform, build_tools_directory):
+    aliases = [
+        _plain_alias(
             "aapt",
-            platforms,
-            _tool_alias_label("linux", build_tools_directory, "aapt"),
-            _tool_alias_label("darwin", build_tools_directory, "aapt"),
-            _tool_alias_label("windows", build_tools_directory, "aapt"),
+            _tool_alias_label(platform, build_tools_directory, "aapt"),
+            tags = ["manual"],
         ),
-        _platform_select_alias(
+        _plain_alias(
             "aapt2",
-            platforms,
-            _tool_alias_label("linux", build_tools_directory, "aapt2"),
-            _tool_alias_label("darwin", build_tools_directory, "aapt2"),
-            _tool_alias_label("windows", build_tools_directory, "aapt2"),
+            _tool_alias_label(platform, build_tools_directory, "aapt2"),
+            tags = ["manual"],
         ),
-        _platform_select_alias(
-            "aapt2_binary",
-            platforms,
-            _tool_alias_label("linux", build_tools_directory, "aapt2"),
-            _tool_alias_label("darwin", build_tools_directory, "aapt2"),
-            _tool_alias_label("windows", build_tools_directory, "aapt2"),
-        ),
-        _platform_select_alias(
+        _plain_alias(
             "aidl",
-            platforms,
-            _tool_alias_label("linux", build_tools_directory, "aidl"),
-            _tool_alias_label("darwin", build_tools_directory, "aidl"),
-            _tool_alias_label("windows", build_tools_directory, "aidl"),
+            _tool_alias_label(platform, build_tools_directory, "aidl"),
+            tags = ["manual"],
         ),
-        _platform_select_alias(
+        _plain_alias(
             "adb",
-            platforms,
-            _adb_alias_label("linux"),
-            _adb_alias_label("darwin"),
-            _adb_alias_label("windows"),
+            _adb_alias_label(platform),
+            tags = ["manual"],
         ),
-        _platform_select_alias(
+        _plain_alias(
             "platform-tools/adb",
-            platforms,
-            _adb_alias_label("linux"),
-            _adb_alias_label("darwin"),
-            _adb_alias_label("windows"),
-        ),
-        _platform_select_alias(
-            "apksigner",
-            platforms,
-            ":apksigner_linux",
-            ":apksigner_darwin",
-            ":apksigner_windows",
+            _adb_alias_label(platform),
+            tags = ["manual"],
         ),
         _plain_alias(
             "dexdump",
-            _tool_alias_label(platforms[0], build_tools_directory, "dexdump"),
+            _tool_alias_label(platform, build_tools_directory, "dexdump"),
             tags = ["manual"],
         ),
-        _platform_select_alias(
+        _plain_alias(
             "main_dex_classes",
-            platforms,
-            "build-tools/linux/{}/mainDexClasses.rules".format(build_tools_directory),
-            "build-tools/darwin/{}/mainDexClasses.rules".format(build_tools_directory),
-            "build-tools/windows/{}/mainDexClasses.rules".format(build_tools_directory),
+            "build-tools/{}/{}/mainDexClasses.rules".format(platform, build_tools_directory),
+            tags = ["manual"],
         ),
-        _platform_select_alias(
+        _plain_alias(
             "zipalign",
-            platforms,
-            _tool_alias_label("linux", build_tools_directory, "zipalign"),
-            _tool_alias_label("darwin", build_tools_directory, "zipalign"),
-            _tool_alias_label("windows", build_tools_directory, "zipalign"),
-        ),
-        _platform_select_alias(
-            "zipalign_binary",
-            platforms,
-            _tool_alias_label("linux", build_tools_directory, "zipalign"),
-            _tool_alias_label("darwin", build_tools_directory, "zipalign"),
-            _tool_alias_label("windows", build_tools_directory, "zipalign"),
+            _tool_alias_label(platform, build_tools_directory, "zipalign"),
+            tags = ["manual"],
         ),
     ]
-    return "\n\n".join(blocks)
+    return aliases
+
+def _platform_aliases(sdk):
+    platforms = sdk["platforms"]
+    build_tools_directory = sdk["build_tools_directory"]
+    if len(platforms) != 1:
+        fail("Expected exactly one platform for Android SDK platform aliases, got [{}].".format(format_platforms(platforms)))
+    return "\n\n".join(_platform_direct_aliases(platforms[0], build_tools_directory))
 
 def _sdk_for_platform(sdk, platform):
     if platform not in sdk["platforms"]:
@@ -561,25 +467,29 @@ def _sdk_for_platform(sdk, platform):
     platform_sdk["platforms"] = [platform]
     return platform_sdk
 
-def _platform_redirect_alias(rctx, sdk, name, target):
+def _platform_redirect_alias(rctx, sdk, name):
     return select_alias(name, [
-        (platform_condition(platform), external_label(platform_repository(rctx, platform, "SDK"), target))
+        (platform_condition(platform), external_label(platform_repository(rctx, platform, "SDK"), name))
         for platform in sdk["platforms"]
     ], tags = ["manual"])
 
 def _platform_redirect_aliases(rctx, sdk):
     blocks = [
-        _platform_redirect_alias(rctx, sdk, "aapt", "aapt"),
-        _platform_redirect_alias(rctx, sdk, "aapt2", "aapt2"),
-        _platform_redirect_alias(rctx, sdk, "aapt2_binary", "aapt2_binary"),
-        _platform_redirect_alias(rctx, sdk, "aidl", "aidl"),
-        _platform_redirect_alias(rctx, sdk, "adb", "adb"),
-        _platform_redirect_alias(rctx, sdk, "platform-tools/adb", "platform-tools/adb"),
-        _platform_redirect_alias(rctx, sdk, "apksigner", "apksigner"),
-        _platform_redirect_alias(rctx, sdk, "dexdump", "dexdump"),
-        _platform_redirect_alias(rctx, sdk, "main_dex_classes", "main_dex_classes"),
-        _platform_redirect_alias(rctx, sdk, "zipalign", "zipalign"),
-        _platform_redirect_alias(rctx, sdk, "zipalign_binary", "zipalign_binary"),
+        _platform_redirect_alias(rctx, sdk, "aapt"),
+        _platform_redirect_alias(rctx, sdk, "aapt_binary"),
+        _platform_redirect_alias(rctx, sdk, "aapt2"),
+        _platform_redirect_alias(rctx, sdk, "aapt2_binary"),
+        _platform_redirect_alias(rctx, sdk, "aidl"),
+        _platform_redirect_alias(rctx, sdk, "aidl_binary"),
+        _platform_redirect_alias(rctx, sdk, "adb"),
+        _platform_redirect_alias(rctx, sdk, "platform-tools/adb"),
+        _platform_redirect_alias(rctx, sdk, "apksigner"),
+        _platform_redirect_alias(rctx, sdk, "build_tools_libs"),
+        _platform_redirect_alias(rctx, sdk, "dexdump"),
+        _platform_redirect_alias(rctx, sdk, "files"),
+        _platform_redirect_alias(rctx, sdk, "main_dex_classes"),
+        _platform_redirect_alias(rctx, sdk, "zipalign"),
+        _platform_redirect_alias(rctx, sdk, "zipalign_binary"),
     ]
     return "\n\n".join(blocks)
 
@@ -617,17 +527,7 @@ android_toolchain(
     name = "android_default_{platform}",
     aapt2 = "@{repository}//:aapt2",
     adb = "@{repository}//:adb",
-    android_archive_jar_optimization_inputs_validator = ":fail",
-    android_archive_packages_validator = ":fail",
-    apk_to_bundle_tool = ":fail",
-    centralize_r_class_tool = ":fail",
-    desugar_globals_jar = ":fail",
-    merge_baseline_profiles_tool = ":fail",
-    object_method_rewriter = ":fail",
-    profgen = ":fail",
-    proto_map_generator = ":fail",
     tags = ["manual"],
-    translation_merger = ":fail",
 )
 """.format(
         api_level = sdk["api_level"],
@@ -673,8 +573,6 @@ def _platform_redirect_rules(rctx, sdk):
 
 def _write_runner_scripts(rctx, sdk):
     for platform in sdk["platforms"]:
-        if platform == "windows":
-            continue
         build_tools_directory = sdk["build_tools_directory"]
         executable_extension = ANDROID_PLATFORMS[platform]["executable_extension"]
         for tool in ["aapt", "aapt2", "aidl", "zipalign"]:
@@ -692,20 +590,15 @@ def _hermetic_android_sdk_platform_repository_impl(rctx):
 
     require_license(rctx, ANDROID_SDK_LICENSE_ENV, "SDK")
     sdk = _sdk_for_platform(_resolve_sdk(rctx), rctx.attr.platform)
-    _download_sdk(rctx, sdk)
+    _download_sdk_platform_tools(rctx, sdk)
     _write_runner_scripts(rctx, sdk)
 
-    rctx.symlink(Label("@rules_android//rules/android_sdk_repository:helper.bzl"), "helper.bzl")
     rctx.template(
         "BUILD.bazel",
         Label("//sdk:BUILD.androidsdk.tpl"),
         substitutions = {
-            "%{api_level}": sdk["api_level"],
-            "%{build_tools_directory}": sdk["build_tools_directory"],
-            "%{build_tools_version}": sdk["build_tools_version"],
             "%{platform_aliases}": _platform_aliases(sdk),
             "%{platform_rules}": _platform_rules(sdk),
-            "%{optional_java_imports}": _optional_java_imports(sdk["api_level"]),
         },
     )
 
@@ -756,7 +649,7 @@ def _hermetic_android_sdk_repository_impl(rctx):
     rctx.symlink(Label("@rules_android//rules/android_sdk_repository:helper.bzl"), "helper.bzl")
     rctx.template(
         "BUILD.bazel",
-        Label("//sdk:BUILD.androidsdk.tpl"),
+        Label("//sdk:BUILD.sdkredirect.tpl"),
         substitutions = {
             "%{api_level}": sdk["api_level"],
             "%{build_tools_directory}": sdk["build_tools_directory"],
