@@ -493,89 +493,27 @@ def _platform_redirect_aliases(rctx, sdk):
     ]
     return "\n\n".join(blocks)
 
-def _platform_redirect_rules_for(rctx, platform, sdk):
-    repository = platform_repository(rctx, platform, "SDK")
-    sdk_name = "sdk_{}".format(platform)
-    build_tools_version = sdk["build_tools_version"]
+def _platform_redirect_rules_for(platform):
     blocks = []
-
-    blocks.append("""android_sdk(
-    name = "{sdk_name}",
-    aapt = "@{repository}//:aapt",
-    aapt2 = "@{repository}//:aapt2",
-    adb = "@{repository}//:adb",
-    aidl = "@{repository}//:aidl",
-    android_jar = "platforms/android-{api_level}/android.jar",
-    apksigner = "@{repository}//:apksigner",
-    build_tools_version = "{build_tools_version}",
-    dexdump = "@{repository}//:dexdump",
-    dx = select({{
-        ":dx_standalone_dexer": ":fail",
-        "//conditions:default": ":d8_compat_dx",
-    }}),
-    framework_aidl = "platforms/android-{api_level}/framework.aidl",
-    legacy_main_dex_list_generator = ":generate_main_dex_list",
-    main_dex_classes = "@{repository}//:main_dex_classes",
-    main_dex_list_creator = ":main_dex_list_creator",
-    proguard = select({{
-        ":disallow_proguard": ":fail",
-        "//conditions:default": "@remote_java_tools//:proguard",
-    }}),
-    source_properties = "platforms/android-{api_level}/source.properties",
-    tags = [
-        "__ANDROID_RULES_MIGRATION__",
-        "manual",
-    ],
-    zipalign = "@{repository}//:zipalign",
-)
-
-android_toolchain(
-    name = "android_default_{platform}",
-    aapt2 = "@{repository}//:aapt2",
-    adb = "@{repository}//:adb",
-    tags = ["manual"],
-)
-""".format(
-        api_level = sdk["api_level"],
-        build_tools_version = build_tools_version,
-        platform = platform,
-        repository = repository,
-        sdk_name = sdk_name,
-    ))
 
     for constraint_name, constraints in ANDROID_PLATFORMS[platform]["constraints"]:
         local_name = constraint_name if platform == "darwin" else platform
         blocks.append("""toolchain(
     name = "sdk_{local_name}_toolchain",
     exec_compatible_with = {constraints},
-    toolchain = ":{sdk_name}",
+    toolchain = ":sdk",
     toolchain_type = ":sdk_toolchain_type",
 )
 
-toolchain(
-    name = "rules_android_sdk_{local_name}_toolchain",
-    exec_compatible_with = {constraints},
-    toolchain = ":{sdk_name}",
-    toolchain_type = "@rules_android//toolchains/android_sdk:toolchain_type",
-)
-
-toolchain(
-    name = "android_default_{local_name}_toolchain",
-    exec_compatible_with = {constraints},
-    toolchain = ":android_default_{platform}",
-    toolchain_type = "@rules_android//toolchains/android:toolchain_type",
-)
 """.format(
             constraints = repr(constraints),
-            platform = platform,
             local_name = local_name,
-            sdk_name = sdk_name,
         ))
 
     return "\n".join(blocks)
 
-def _platform_redirect_rules(rctx, sdk):
-    return "\n".join([_platform_redirect_rules_for(rctx, platform, sdk) for platform in sdk["platforms"]])
+def _platform_redirect_rules(sdk):
+    return "\n".join([_platform_redirect_rules_for(platform) for platform in sdk["platforms"]])
 
 def _write_runner_scripts(rctx, sdk):
     for platform in sdk["platforms"]:
@@ -661,7 +599,7 @@ def _hermetic_android_sdk_repository_impl(rctx):
             "%{build_tools_directory}": sdk["build_tools_directory"],
             "%{build_tools_version}": sdk["build_tools_version"],
             "%{platform_aliases}": _platform_redirect_aliases(rctx, sdk),
-            "%{platform_rules}": _platform_redirect_rules(rctx, sdk),
+            "%{platform_rules}": _platform_redirect_rules(sdk),
             "%{optional_java_imports}": _optional_java_imports(sdk["api_level"]),
         },
     )

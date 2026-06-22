@@ -6,7 +6,6 @@ load(
 )
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 load("@rules_android//rules:rules.bzl", "android_sdk")
-load("@rules_android//toolchains/android:toolchain.bzl", "android_toolchain")
 load("@rules_java//java:defs.bzl", "java_binary", "java_import")
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 
