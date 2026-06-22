@@ -493,20 +493,8 @@ def _platform_redirect_aliases(rctx, sdk):
     ]
     return "\n\n".join(blocks)
 
-def _platform_redirect_rules_for(rctx, platform, sdk):
-    repository = platform_repository(rctx, platform, "SDK")
+def _platform_redirect_rules_for(platform):
     blocks = []
-
-    blocks.append("""android_toolchain(
-    name = "android_default_{platform}",
-    aapt2 = "@{repository}//:aapt2",
-    adb = "@{repository}//:adb",
-    tags = ["manual"],
-)
-""".format(
-        platform = platform,
-        repository = repository,
-    ))
 
     for constraint_name, constraints in ANDROID_PLATFORMS[platform]["constraints"]:
         local_name = constraint_name if platform == "darwin" else platform
@@ -517,29 +505,15 @@ def _platform_redirect_rules_for(rctx, platform, sdk):
     toolchain_type = ":sdk_toolchain_type",
 )
 
-toolchain(
-    name = "rules_android_sdk_{local_name}_toolchain",
-    exec_compatible_with = {constraints},
-    toolchain = ":sdk",
-    toolchain_type = "@rules_android//toolchains/android_sdk:toolchain_type",
-)
-
-toolchain(
-    name = "android_default_{local_name}_toolchain",
-    exec_compatible_with = {constraints},
-    toolchain = ":android_default_{platform}",
-    toolchain_type = "@rules_android//toolchains/android:toolchain_type",
-)
 """.format(
             constraints = repr(constraints),
-            platform = platform,
             local_name = local_name,
         ))
 
     return "\n".join(blocks)
 
-def _platform_redirect_rules(rctx, sdk):
-    return "\n".join([_platform_redirect_rules_for(rctx, platform, sdk) for platform in sdk["platforms"]])
+def _platform_redirect_rules(sdk):
+    return "\n".join([_platform_redirect_rules_for(platform) for platform in sdk["platforms"]])
 
 def _write_runner_scripts(rctx, sdk):
     for platform in sdk["platforms"]:
@@ -625,7 +599,7 @@ def _hermetic_android_sdk_repository_impl(rctx):
             "%{build_tools_directory}": sdk["build_tools_directory"],
             "%{build_tools_version}": sdk["build_tools_version"],
             "%{platform_aliases}": _platform_redirect_aliases(rctx, sdk),
-            "%{platform_rules}": _platform_redirect_rules(rctx, sdk),
+            "%{platform_rules}": _platform_redirect_rules(sdk),
             "%{optional_java_imports}": _optional_java_imports(sdk["api_level"]),
         },
     )
