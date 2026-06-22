@@ -200,8 +200,3 @@ filegroup(
         "platforms/android-%{api_level}/framework.aidl",
     ],
 )
-
-filegroup(
-    name = "sdk_path",
-    srcs = ["."],
-)
