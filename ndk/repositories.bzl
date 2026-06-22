@@ -17,7 +17,7 @@ load(
 ANDROID_NDK_LICENSE_ENV = "ACCEPTED_ANDROID_NDK_LICENSE_VERSION"
 
 # TODO: When rules_android_ndk releases, import their default
-DEFAULT_API_LEVEL = 31
+_DEFAULT_API_LEVEL = 31
 
 NDK_TAG = tag_class(attrs = {
     "version": attr.string(
@@ -25,7 +25,7 @@ NDK_TAG = tag_class(attrs = {
         mandatory = True,
     ),
     "api_level": attr.int(
-        doc = "Minimum Android API level for the NDK C/C++ toolchains. Defaults to {}.".format(DEFAULT_API_LEVEL),
+        doc = "Minimum Android API level for the NDK C/C++ toolchains. Defaults to {}.".format(_DEFAULT_API_LEVEL),
     ),
     "urls": attr.string_dict(
         doc = "Custom NDK archive URLs keyed by supported platforms from linux, darwin, and windows.",
@@ -86,7 +86,7 @@ def _known_archive_attrs(archives):
 
 def _resolve_ndk(rctx):
     versions_json = json.decode(rctx.read(rctx.attr._versions_json))
-    api_level = rctx.attr.api_level or DEFAULT_API_LEVEL
+    api_level = rctx.attr.api_level or _DEFAULT_API_LEVEL
     custom_archives = rctx.attr.urls or rctx.attr.sha256s or rctx.attr.strip_prefix
     versions = versions_json["versions"]
     aliases = versions_json.get("aliases", {})
