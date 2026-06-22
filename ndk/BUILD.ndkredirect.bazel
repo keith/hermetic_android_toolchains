@@ -32,6 +32,7 @@ package(default_visibility = ["//visibility:public"])
         android_native_app_glue_header = "@androidndk_{}//:sources/android/native_app_glue/android_native_app_glue.h".format(platform),
         cpufeatures = "@androidndk_{}//:cpufeatures".format(platform),
         native_app_glue = "@androidndk_{}//:native_app_glue".format(platform),
+        tags = ["manual"],
     )
     for platform in sorted(ANDROID_PLATFORMS.keys())
     for platform_name, _ in ANDROID_PLATFORMS[platform]["constraints"]
@@ -52,14 +53,17 @@ package(default_visibility = ["//visibility:public"])
 ndk_cc_export(
     name = "cpufeatures",
     export = "cpufeatures",
+    tags = ["manual"],
 )
 
 ndk_cc_export(
     name = "native_app_glue",
     export = "native_app_glue",
+    tags = ["manual"],
 )
 
 ndk_file_export(
     name = "sources/android/native_app_glue/android_native_app_glue.h",
     export = "android_native_app_glue_header",
+    tags = ["manual"],
 )
