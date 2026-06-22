@@ -45,13 +45,54 @@ action_command_line_test(
     target_under_test = "//examples/basic_app/java/com/example/hermetic:app",
 )
 
+_SDK_PLATFORM_SPECIFIC_TARGETS = [
+    "aapt2",
+    "aapt2_binary",
+    "aapt_binary",
+    "adb",
+    "aidl_binary",
+    "apksigner",
+    "build_tools_libs",
+    "dexdump",
+    "files",
+    "platform-tools/adb",
+    "zipalign",
+    "zipalign_binary",
+]
+
+_SDK_HUB_TARGETS = [
+    "android_car",
+    "android_car-35",
+    "api_35_enabled",
+    "core-for-system-modules-jar",
+    "d8_compat_dx",
+    "generate_main_dex_list",
+    "has_androidsdk",
+    "legacy_test-35",
+    "main_dex_list_creator",
+    "org_apache_http_legacy",
+    "org_apache_http_legacy-35",
+    "sdk",
+    "sdk-toolchain",
+]
+
 # Makes sure we set these to something that doesn't just error
 build_test(
     name = "valid_labels_build_test",
     targets = [
-        "@androidsdk//:aapt2_binary",
         "@androidsdk//:platform-tools/adb",
         "@androidsdk//:sdk-toolchain",
-        "@androidsdk//:zipalign_binary",
+    ] + [
+        "@androidsdk//:{}".format(target)
+        for target in _SDK_PLATFORM_SPECIFIC_TARGETS + _SDK_HUB_TARGETS
+    ] + [
+        # buildifier: disable=canonical-repository
+        "@@+android+androidsdk_{}//:{}".format(platform, target)
+        for platform in [
+            "linux",
+            "darwin",
+            "windows",
+        ]
+        for target in _SDK_PLATFORM_SPECIFIC_TARGETS
     ],
 )

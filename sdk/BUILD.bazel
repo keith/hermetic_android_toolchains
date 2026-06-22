@@ -1,4 +1,5 @@
 exports_files([
     "BUILD.androidsdk.tpl",
+    "BUILD.sdkredirect.tpl",
     "versions.json",
 ])
