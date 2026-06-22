@@ -3,6 +3,7 @@
 set -euo pipefail
 
 ./tools/generate_sdk_versions.py
+./tools/generate_ndk_versions.py
 
 if git diff --quiet; then
   echo "No version updates found."
