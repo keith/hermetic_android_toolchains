@@ -509,12 +509,18 @@ def _platform_redirect_rules_for(rctx, platform, sdk):
     apksigner = "@{repository}//:apksigner",
     build_tools_version = "{build_tools_version}",
     dexdump = "@{repository}//:dexdump",
-    dx = ":d8_compat_dx",
+    dx = select({{
+        ":dx_standalone_dexer": ":fail",
+        "//conditions:default": ":d8_compat_dx",
+    }}),
     framework_aidl = "platforms/android-{api_level}/framework.aidl",
     legacy_main_dex_list_generator = ":generate_main_dex_list",
     main_dex_classes = "@{repository}//:main_dex_classes",
     main_dex_list_creator = ":main_dex_list_creator",
-    proguard = "@remote_java_tools//:proguard",
+    proguard = select({{
+        ":disallow_proguard": ":fail",
+        "//conditions:default": "@remote_java_tools//:proguard",
+    }}),
     source_properties = "platforms/android-{api_level}/source.properties",
     tags = [
         "__ANDROID_RULES_MIGRATION__",
