@@ -3,15 +3,15 @@
 load(
     "//private:utils.bzl",
     "ANDROID_PLATFORMS",
-    _archive_url = "archive_url",
-    _check_known_platforms = "check_known_platforms",
-    _check_matching_platforms = "check_matching_platforms",
-    _external_label = "external_label",
-    _format_platforms = "format_platforms",
-    _platform_condition = "platform_condition",
-    _platform_repository = "platform_repository",
-    _require_license = "require_license",
-    _select_alias = "select_alias",
+    "archive_url",
+    "check_known_platforms",
+    "check_matching_platforms",
+    "external_label",
+    "format_platforms",
+    "platform_condition",
+    "platform_repository",
+    "require_license",
+    "select_alias",
 )
 
 ANDROID_NDK_LICENSE_ENV = "ACCEPTED_ANDROID_NDK_LICENSE_VERSION"
@@ -59,9 +59,9 @@ def _custom_archives(rctx):
         fail("Custom Android NDK archives for version {} require both urls and sha256s.".format(repr(rctx.attr.version)))
     if not rctx.attr.strip_prefix:
         fail("Custom Android NDK archives for version {} require strip_prefix.".format(repr(rctx.attr.version)))
-    _check_known_platforms(rctx.attr.urls, "urls")
+    check_known_platforms(rctx.attr.urls, "urls")
     platforms = sorted(rctx.attr.urls.keys())
-    _check_matching_platforms(rctx.attr.sha256s, "sha256s", platforms)
+    check_matching_platforms(rctx.attr.sha256s, "sha256s", platforms)
     return {
         "integrities": {},
         "platforms": platforms,
@@ -75,7 +75,7 @@ def _known_archive_attrs(archives):
     sha256s = {}
     integrities = {}
     for platform, archive in archives.items():
-        urls[platform] = _archive_url(archive)
+        urls[platform] = archive_url(archive)
         if archive.get("integrity"):
             integrities[platform] = archive["integrity"]
         elif archive.get("sha256"):
@@ -151,22 +151,22 @@ def _ndk_for_platform(ndk, platform):
     if platform not in ndk["platforms"]:
         fail("Android NDK archives are not available for platform {}. Available platforms: [{}].".format(
             repr(platform),
-            _format_platforms(ndk["platforms"]),
+            format_platforms(ndk["platforms"]),
         ))
     platform_ndk = dict(ndk)
     platform_ndk["platforms"] = [platform]
     return platform_ndk
 
 def _platform_redirect_alias(rctx, ndk, name, target):
-    return _select_alias(name, [
-        (_platform_condition(platform), _external_label(_platform_repository(rctx, platform, "NDK"), target))
+    return select_alias(name, [
+        (platform_condition(platform), external_label(platform_repository(rctx, platform, "NDK"), target))
         for platform in ndk["platforms"]
     ])
 
 def _platform_redirect_toolchains(rctx, ndk):
     toolchains = []
     for platform in ndk["platforms"]:
-        repository = _platform_repository(rctx, platform, "NDK")
+        repository = platform_repository(rctx, platform, "NDK")
         clang_directory = _PLATFORMS[platform]["clang_directory"]
         toolchain_pattern = "@{}//{}:cc_toolchain_{{}}".format(repository, clang_directory)
         for name, constraints in _PLATFORMS[platform]["constraints"]:
@@ -174,11 +174,11 @@ def _platform_redirect_toolchains(rctx, ndk):
     return repr(toolchains)
 
 def _platform_redirect_toolchain_suite_alias(rctx, ndk):
-    return _select_alias("toolchain", [
+    return select_alias("toolchain", [
         (
-            _platform_condition(platform),
+            platform_condition(platform),
             "@{}//{}:cc_toolchain_suite".format(
-                _platform_repository(rctx, platform, "NDK"),
+                platform_repository(rctx, platform, "NDK"),
                 _PLATFORMS[platform]["clang_directory"],
             ),
         )
@@ -249,7 +249,7 @@ def _hermetic_android_ndk_platform_repository_impl(rctx):
     if not rctx.attr.version:
         fail("hermetic_android_ndk_platform_repository requires version.")
 
-    _require_license(rctx, ANDROID_NDK_LICENSE_ENV, "NDK")
+    require_license(rctx, ANDROID_NDK_LICENSE_ENV, "NDK")
     ndk = _ndk_for_platform(_resolve_ndk(rctx), rctx.attr.platform)
     _download_ndk(rctx, ndk)
 
@@ -308,7 +308,7 @@ def _hermetic_android_ndk_repository_impl(rctx):
     if not rctx.attr.version:
         fail("hermetic_android_ndk_repository requires version.")
 
-    _require_license(rctx, ANDROID_NDK_LICENSE_ENV, "NDK")
+    require_license(rctx, ANDROID_NDK_LICENSE_ENV, "NDK")
     ndk = _resolve_ndk(rctx)
 
     rctx.file(

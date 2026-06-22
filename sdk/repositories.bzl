@@ -3,16 +3,16 @@
 load(
     "//private:utils.bzl",
     "ANDROID_PLATFORMS",
-    _archive_attrs = "archive_attrs",
-    _archive_url = "archive_url",
-    _check_known_platforms = "check_known_platforms",
-    _check_matching_platforms = "check_matching_platforms",
-    _external_label = "external_label",
-    _format_platforms = "format_platforms",
-    _platform_condition = "platform_condition",
-    _platform_repository = "platform_repository",
-    _require_license = "require_license",
-    _select_alias = "select_alias",
+    "archive_attrs",
+    "archive_url",
+    "check_known_platforms",
+    "check_matching_platforms",
+    "external_label",
+    "format_platforms",
+    "platform_condition",
+    "platform_repository",
+    "require_license",
+    "select_alias",
 )
 
 ANDROID_SDK_LICENSE_ENV = "ACCEPTED_ANDROID_SDK_LICENSE_VERSION"
@@ -68,11 +68,11 @@ def _custom_platform_archives(rctx, urls, sha256s, strip_prefixes, what):
             what,
             what,
         ))
-    _check_known_platforms(urls, "{}_urls".format(what), what = what)
+    check_known_platforms(urls, "{}_urls".format(what), what = what)
     platforms = sorted(urls.keys())
-    _check_matching_platforms(sha256s, "{}_sha256s".format(what), platforms, what = what)
+    check_matching_platforms(sha256s, "{}_sha256s".format(what), platforms, what = what)
     if strip_prefixes:
-        _check_matching_platforms(strip_prefixes, "{}_strip_prefixes".format(what), platforms, what = what)
+        check_matching_platforms(strip_prefixes, "{}_strip_prefixes".format(what), platforms, what = what)
     return urls, sha256s, strip_prefixes, platforms
 
 def _custom_archive_attrs(rctx):
@@ -93,7 +93,7 @@ def _common_platforms(*platform_groups):
         platforms = [platform for platform in platforms if platform in platform_group]
     if not platforms:
         fail("Android SDK component archives have no platforms in common: {}.".format(
-            ", ".join(["[{}]".format(_format_platforms(platform_group)) for platform_group in platform_groups]),
+            ", ".join(["[{}]".format(format_platforms(platform_group)) for platform_group in platform_groups]),
         ))
     return platforms
 
@@ -113,11 +113,11 @@ def _resolve_known_sdk(rctx, data, version, known):
         fail("Unknown platform-tools version {} in SDK versions metadata.".format(repr(platform_tools_version)))
 
     build_tools = components["build_tools"][build_tools_version]
-    build_tools_urls, build_tools_sha256s, build_tools_strip_prefixes = _archive_attrs(build_tools["archives"], include_strip_prefixes = True)
+    build_tools_urls, build_tools_sha256s, build_tools_strip_prefixes = archive_attrs(build_tools["archives"], include_strip_prefixes = True)
     build_tools_platforms = sorted(build_tools_urls.keys())
 
     platform_tools = components["platform_tools"][platform_tools_version]
-    platform_tools_urls, platform_tools_sha256s, platform_tools_strip_prefixes = _archive_attrs(platform_tools["archives"], include_strip_prefixes = True)
+    platform_tools_urls, platform_tools_sha256s, platform_tools_strip_prefixes = archive_attrs(platform_tools["archives"], include_strip_prefixes = True)
     platform_tools_platforms = sorted(platform_tools_urls.keys())
 
     platform = known["platform"]
@@ -135,7 +135,7 @@ def _resolve_known_sdk(rctx, data, version, known):
         "platforms": _common_platforms(build_tools_platforms, platform_tools_platforms),
         "platforms_sha256": platform["sha256"],
         "platforms_strip_prefix": platform.get("strip_prefix", ""),
-        "platforms_url": _archive_url(platform),
+        "platforms_url": archive_url(platform),
     }
 
 def _resolve_custom_sdk(rctx):
@@ -445,12 +445,12 @@ def _adb_alias_label(platform):
 def _platform_select_alias(name, platforms, linux, darwin, windows):
     entries = []
     if "linux" in platforms:
-        entries.append((_platform_condition("linux"), linux))
+        entries.append((platform_condition("linux"), linux))
     if "darwin" in platforms:
-        entries.append((_platform_condition("darwin"), darwin))
+        entries.append((platform_condition("darwin"), darwin))
     if "windows" in platforms:
-        entries.append((_platform_condition("windows"), windows))
-    return _select_alias(name, entries, tags = ["manual"])
+        entries.append((platform_condition("windows"), windows))
+    return select_alias(name, entries, tags = ["manual"])
 
 def _platform_aliases(sdk):
     platforms = sdk["platforms"]
@@ -540,15 +540,15 @@ def _sdk_for_platform(sdk, platform):
     if platform not in sdk["platforms"]:
         fail("Android SDK archives are not available for platform {}. Available platforms: [{}].".format(
             repr(platform),
-            _format_platforms(sdk["platforms"]),
+            format_platforms(sdk["platforms"]),
         ))
     platform_sdk = dict(sdk)
     platform_sdk["platforms"] = [platform]
     return platform_sdk
 
 def _platform_redirect_alias(rctx, sdk, name, target):
-    return _select_alias(name, [
-        (_platform_condition(platform), _external_label(_platform_repository(rctx, platform, "SDK"), target))
+    return select_alias(name, [
+        (platform_condition(platform), external_label(platform_repository(rctx, platform, "SDK"), target))
         for platform in sdk["platforms"]
     ], tags = ["manual"])
 
@@ -569,7 +569,7 @@ def _platform_redirect_aliases(rctx, sdk):
     return "\n\n".join(blocks)
 
 def _platform_redirect_rules_for(rctx, platform, sdk):
-    repository = _platform_repository(rctx, platform, "SDK")
+    repository = platform_repository(rctx, platform, "SDK")
     sdk_name = "sdk_{}".format(platform)
     build_tools_version = sdk["build_tools_version"]
     blocks = []
@@ -671,7 +671,7 @@ def _hermetic_android_sdk_platform_repository_impl(rctx):
     if not rctx.attr.build_tools_version:
         fail("hermetic_android_sdk_platform_repository requires build_tools_version.")
 
-    _require_license(rctx, ANDROID_SDK_LICENSE_ENV, "SDK")
+    require_license(rctx, ANDROID_SDK_LICENSE_ENV, "SDK")
     sdk = _sdk_for_platform(_resolve_sdk(rctx), rctx.attr.platform)
     _download_sdk(rctx, sdk)
     _write_runner_scripts(rctx, sdk)
@@ -724,7 +724,7 @@ def _hermetic_android_sdk_repository_impl(rctx):
     if not rctx.attr.build_tools_version:
         fail("hermetic_android_sdk_repository requires build_tools_version.")
 
-    _require_license(rctx, ANDROID_SDK_LICENSE_ENV, "SDK")
+    require_license(rctx, ANDROID_SDK_LICENSE_ENV, "SDK")
     sdk = _resolve_sdk(rctx)
     _download_component(
         rctx,
