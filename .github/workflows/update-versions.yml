@@ -1,0 +1,27 @@
+name: Update Versions
+
+on:
+  schedule:
+    - cron: "0 15 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-versions
+  cancel-in-progress: false
+
+jobs:
+  update_versions:
+    name: Update versions
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Update versions
+        run: ./.github/update-versions.sh
