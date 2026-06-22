@@ -4,7 +4,7 @@ load("//ndk:versions.bzl", "DEFAULT_API_LEVEL", "NDK_VERSIONS")
 load(
     "//private:utils.bzl",
     "ANDROID_PLATFORMS",
-    _archive_attrs = "archive_attrs",
+    _archive_url = "archive_url",
     _check_known_platforms = "check_known_platforms",
     _check_matching_platforms = "check_matching_platforms",
     _external_label = "external_label",
@@ -61,23 +61,43 @@ def _custom_archives(rctx):
     platforms = sorted(rctx.attr.urls.keys())
     _check_matching_platforms(rctx.attr.sha256s, "sha256s", platforms)
     return {
+        "integrities": {},
         "platforms": platforms,
         "sha256s": rctx.attr.sha256s,
         "strip_prefix": rctx.attr.strip_prefix,
         "urls": rctx.attr.urls,
     }
 
+def _known_archive_attrs(archives):
+    urls = {}
+    sha256s = {}
+    integrities = {}
+    for platform, archive in archives.items():
+        urls[platform] = _archive_url(archive)
+        if archive.get("integrity"):
+            integrities[platform] = archive["integrity"]
+        elif archive.get("sha256"):
+            sha256s[platform] = archive["sha256"]
+        else:
+            fail("Missing checksum for NDK archive {}.".format(archive.get("file", platform)))
+    return urls, sha256s, integrities
+
 def _resolve_ndk(rctx):
     versions_json = json.decode(rctx.read(rctx.attr._versions_json))
     api_level = rctx.attr.api_level or DEFAULT_API_LEVEL
     custom_archives = rctx.attr.urls or rctx.attr.sha256s or rctx.attr.strip_prefix
     versions = versions_json["versions"]
+    aliases = versions_json.get("aliases", {})
     if custom_archives:
         ndk = _custom_archives(rctx)
-    elif rctx.attr.version in versions:
-        known = versions[rctx.attr.version]
-        urls, sha256s = _archive_attrs(known["archives"], include_strip_prefixes = False)
+    elif rctx.attr.version in versions or rctx.attr.version in aliases:
+        version = aliases.get(rctx.attr.version, rctx.attr.version)
+        if version not in versions:
+            fail("Android NDK alias {} resolves to unknown version {}.".format(repr(rctx.attr.version), repr(version)))
+        known = versions[version]
+        urls, sha256s, integrities = _known_archive_attrs(known["archives"])
         ndk = {
+            "integrities": integrities,
             "platforms": sorted(urls.keys()),
             "sha256s": sha256s,
             "strip_prefix": known.get("strip_prefix", "android-ndk-{}".format(rctx.attr.version)),
@@ -90,13 +110,19 @@ def _resolve_ndk(rctx):
 
 def _download_ndk(rctx, ndk):
     for platform in ndk["platforms"]:
-        if platform not in ndk["urls"] or platform not in ndk["sha256s"]:
+        if platform not in ndk["urls"]:
             fail("Missing NDK archive for resolved platform {}.".format(platform))
-        rctx.download_and_extract(
-            url = ndk["urls"][platform],
-            sha256 = ndk["sha256s"][platform],
-            stripPrefix = ndk["strip_prefix"],
-        )
+        kwargs = {
+            "url": ndk["urls"][platform],
+            "stripPrefix": ndk["strip_prefix"],
+        }
+        if platform in ndk.get("integrities", {}):
+            kwargs["integrity"] = ndk["integrities"][platform]
+        elif platform in ndk["sha256s"]:
+            kwargs["sha256"] = ndk["sha256s"][platform]
+        else:
+            fail("Missing NDK archive checksum for resolved platform {}.".format(platform))
+        rctx.download_and_extract(**kwargs)
 
 def _clang_resource_dir(rctx, clang_directory):
     for parent in ["lib/clang", "lib64/clang"]:
