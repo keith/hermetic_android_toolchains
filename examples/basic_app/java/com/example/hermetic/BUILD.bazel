@@ -35,6 +35,10 @@ cc_library(
     hdrs = ["jni_dep.h"],
     linkopts = ["-llog"],
     tags = ["manual"],
+    deps = [
+        "@androidndk//:cpufeatures",
+        "@androidndk//:native_app_glue",
+    ],
 )
 
 build_test(
