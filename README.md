@@ -16,8 +16,8 @@ bazel_dep(name = "rules_android", version = "0.7.3")
 
 android = use_extension("@hermetic_android_toolchains//:extensions.bzl", "android")
 android.sdk(
-    version = "35",
     build_tools_version = "35.0.0",
+    version = "35",
 )
 android.ndk(version = "r25c")
 use_repo(android, "androidsdk", "androidndk")
