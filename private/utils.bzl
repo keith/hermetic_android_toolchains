@@ -22,9 +22,9 @@ ANDROID_PLATFORMS = {
 }
 
 _PLATFORM_CONDITIONS = {
-    "darwin": ":darwin_exec",
-    "linux": ":linux_x86_64_exec",
-    "windows": ":windows_x86_64_exec",
+    "darwin": Label("//:platform_darwin"),
+    "linux": Label("//:platform_linux"),
+    "windows": Label("//:platform_windows"),
 }
 
 def require_license(rctx, license_env, component):

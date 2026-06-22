@@ -1,4 +1,10 @@
 exports_files([
     "BUILD.androidndk.bazel",
+    "BUILD.ndkredirect.bazel",
     "versions.json",
 ])
+
+toolchain_type(
+    name = "exports_toolchain_type",
+    visibility = ["//visibility:public"],
+)

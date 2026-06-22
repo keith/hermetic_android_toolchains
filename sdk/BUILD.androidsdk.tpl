@@ -32,32 +32,6 @@ config_setting(
 )
 
 config_setting(
-    name = "linux_x86_64_exec",
-    constraint_values = [
-        "@platforms//os:linux",
-        "@platforms//cpu:x86_64",
-    ],
-    visibility = ["//visibility:private"],
-)
-
-config_setting(
-    name = "darwin_exec",
-    constraint_values = [
-        "@platforms//os:macos",
-    ],
-    visibility = ["//visibility:private"],
-)
-
-config_setting(
-    name = "windows_x86_64_exec",
-    constraint_values = [
-        "@platforms//os:windows",
-        "@platforms//cpu:x86_64",
-    ],
-    visibility = ["//visibility:private"],
-)
-
-config_setting(
     name = "api_%{api_level}_enabled",
     flag_values = {
         ":api_level": "%{api_level}",
@@ -150,7 +124,7 @@ sh_binary(
 alias(
     name = "fail",
     actual = select({
-        ":windows_x86_64_exec": ":windows_fail.cmd",
+        "@platforms//os:windows": ":windows_fail.cmd",
         "//conditions:default": ":bash_fail",
     }),
 )

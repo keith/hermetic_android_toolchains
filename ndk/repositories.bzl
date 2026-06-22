@@ -6,12 +6,8 @@ load(
     "archive_url",
     "check_known_platforms",
     "check_matching_platforms",
-    "external_label",
     "format_platforms",
-    "platform_condition",
-    "platform_repository",
     "require_license",
-    "select_alias",
 )
 
 ANDROID_NDK_LICENSE_ENV = "ACCEPTED_ANDROID_NDK_LICENSE_VERSION"
@@ -139,14 +135,6 @@ def _clang_resource_dir(rctx, clang_directory):
         return "{}/{}".format(parent, versions[0])
     fail("Could not find clang resource directory under {}.".format(clang_directory))
 
-def _platform_toolchains(platforms):
-    toolchains = []
-    for platform in platforms:
-        clang_directory = _PLATFORMS[platform]["clang_directory"]
-        for name, constraints in _PLATFORMS[platform]["constraints"]:
-            toolchains.append((name, clang_directory, constraints))
-    return repr(toolchains)
-
 def _ndk_for_platform(ndk, platform):
     if platform not in ndk["platforms"]:
         fail("Android NDK archives are not available for platform {}. Available platforms: [{}].".format(
@@ -156,66 +144,6 @@ def _ndk_for_platform(ndk, platform):
     platform_ndk = dict(ndk)
     platform_ndk["platforms"] = [platform]
     return platform_ndk
-
-def _platform_redirect_alias(rctx, ndk, name, target):
-    return select_alias(name, [
-        (platform_condition(platform), external_label(platform_repository(rctx, platform, "NDK"), target))
-        for platform in ndk["platforms"]
-    ])
-
-def _platform_redirect_toolchains(rctx, ndk):
-    toolchains = []
-    for platform in ndk["platforms"]:
-        repository = platform_repository(rctx, platform, "NDK")
-        clang_directory = _PLATFORMS[platform]["clang_directory"]
-        toolchain_pattern = "@{}//{}:cc_toolchain_{{}}".format(repository, clang_directory)
-        for name, constraints in _PLATFORMS[platform]["constraints"]:
-            toolchains.append((name, toolchain_pattern, constraints))
-    return repr(toolchains)
-
-def _platform_redirect_toolchain_suite_alias(rctx, ndk):
-    return select_alias("toolchain", [
-        (
-            platform_condition(platform),
-            "@{}//{}:cc_toolchain_suite".format(
-                platform_repository(rctx, platform, "NDK"),
-                _PLATFORMS[platform]["clang_directory"],
-            ),
-        )
-        for platform in ndk["platforms"]
-    ])
-
-def _platform_redirect_build_file_content(rctx, ndk):
-    aliases = [
-        _platform_redirect_toolchain_suite_alias(rctx, ndk),
-        _platform_redirect_alias(rctx, ndk, "cpufeatures", "cpufeatures"),
-        _platform_redirect_alias(rctx, ndk, "native_app_glue", "native_app_glue"),
-        _platform_redirect_alias(rctx, ndk, "sources/android/native_app_glue/android_native_app_glue.h", "sources/android/native_app_glue/android_native_app_glue.h"),
-    ]
-    return """\"\"\"Generated Android NDK platform redirect repository.\"\"\"
-
-load("//:platform_toolchains.bzl", "PLATFORM_TOOLCHAINS")
-load("//:target_systems.bzl", "CPU_CONSTRAINT", "TARGET_SYSTEM_NAMES")
-
-package(default_visibility = ["//visibility:public"])
-
-[
-    toolchain(
-        name = "toolchain_{{}}_{{}}".format(platform_name, target_system_name),
-        exec_compatible_with = exec_compatible_with,
-        target_compatible_with = [
-            "@platforms//os:android",
-            CPU_CONSTRAINT[target_system_name],
-        ],
-        toolchain = toolchain_pattern.format(target_system_name),
-        toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
-    )
-    for platform_name, toolchain_pattern, exec_compatible_with in PLATFORM_TOOLCHAINS
-    for target_system_name in TARGET_SYSTEM_NAMES
-]
-
-{aliases}
-""".format(aliases = "\n\n".join(aliases))
 
 def _generate_platform_build_files(rctx, ndk):
     repository_name = rctx.attr._rules_android_ndk_build.workspace_name
@@ -255,10 +183,6 @@ def _hermetic_android_ndk_platform_repository_impl(rctx):
 
     rctx.file("ndk/.keep", "")
     rctx.symlink(rctx.path("sources"), "ndk/sources")
-    rctx.file(
-        "platform_toolchains.bzl",
-        "PLATFORM_TOOLCHAINS = {}\n".format(_platform_toolchains(ndk["platforms"])),
-    )
     rctx.symlink(Label("//ndk:BUILD.androidndk.bazel"), "BUILD.bazel")
     rctx.template(
         "target_systems.bzl",
@@ -309,13 +233,8 @@ def _hermetic_android_ndk_repository_impl(rctx):
         fail("hermetic_android_ndk_repository requires version.")
 
     require_license(rctx, ANDROID_NDK_LICENSE_ENV, "NDK")
-    ndk = _resolve_ndk(rctx)
 
-    rctx.file(
-        "platform_toolchains.bzl",
-        "PLATFORM_TOOLCHAINS = {}\n".format(_platform_redirect_toolchains(rctx, ndk)),
-    )
-    rctx.file("BUILD.bazel", _platform_redirect_build_file_content(rctx, ndk))
+    rctx.symlink(Label("//ndk:BUILD.ndkredirect.bazel"), "BUILD.bazel")
     rctx.template(
         "target_systems.bzl",
         rctx.attr._template_target_systems,
