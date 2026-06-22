@@ -1,5 +1,19 @@
 """Repository rule for downloading a hermetic Android SDK."""
 
+load(
+    "//private:utils.bzl",
+    "ANDROID_PLATFORMS",
+    _archive_attrs = "archive_attrs",
+    _archive_url = "archive_url",
+    _check_known_platforms = "check_known_platforms",
+    _check_matching_platforms = "check_matching_platforms",
+    _external_label = "external_label",
+    _format_platforms = "format_platforms",
+    _platform_condition = "platform_condition",
+    _platform_repository = "platform_repository",
+    _require_license = "require_license",
+    _select_alias = "select_alias",
+)
 load("//sdk:versions.bzl", "SDK_VERSIONS")
 
 ANDROID_SDK_LICENSE_ENV = "ACCEPTED_ANDROID_SDK_LICENSE_VERSION"
@@ -45,85 +59,7 @@ SDK_TAG = tag_class(attrs = {
     ),
 })
 
-_PLATFORMS = {
-    "darwin": {
-        "constraints": [
-            ("darwin", ["@platforms//os:macos"]),
-        ],
-        "executable_extension": "",
-    },
-    "linux": {
-        "constraints": [
-            ("linux", ["@platforms//os:linux", "@platforms//cpu:x86_64"]),
-        ],
-        "executable_extension": "",
-    },
-    "windows": {
-        "constraints": [
-            ("windows", ["@platforms//os:windows", "@platforms//cpu:x86_64"]),
-        ],
-        "executable_extension": ".exe",
-    },
-}
-
-SDK_PLATFORMS = sorted(_PLATFORMS.keys())
-
-def _require_license(rctx):
-    value = rctx.getenv(ANDROID_SDK_LICENSE_ENV)
-    if value != rctx.attr.version:
-        fail("""\
-Before using the hermetic Android SDK toolchain you must read and accept the license for the current version. Once you have done so, add this in your '.bazelrc':
-
-common --repo_env={}={}
-
-Current {} value was {}.""".format(
-            ANDROID_SDK_LICENSE_ENV,
-            rctx.attr.version,
-            ANDROID_SDK_LICENSE_ENV,
-            value or "unset",
-        ))
-
-def _archive_url(archive):
-    if archive.get("url"):
-        return archive["url"]
-    return "https://dl.google.com/android/repository/{}".format(archive["file"])
-
-def _archive_attrs(archives):
-    urls = {}
-    sha256s = {}
-    strip_prefixes = {}
-    for platform, archive in archives.items():
-        urls[platform] = _archive_url(archive)
-        sha256s[platform] = archive["sha256"]
-        if archive.get("strip_prefix"):
-            strip_prefixes[platform] = archive["strip_prefix"]
-    return urls, sha256s, strip_prefixes
-
-def _format_platforms(platforms):
-    return ", ".join(sorted(platforms))
-
-def _check_known_platforms(values, attr_name, what):
-    keys = sorted(values.keys())
-    unknown = [platform for platform in keys if platform not in _PLATFORMS]
-    if unknown:
-        fail("{} contains unsupported platforms for {}: [{}]. Expected keys from [{}].".format(
-            attr_name,
-            what,
-            _format_platforms(unknown),
-            _format_platforms(_PLATFORMS.keys()),
-        ))
-
-def _check_matching_platforms(values, attr_name, what, platforms):
-    keys = sorted(values.keys())
-    expected = sorted(platforms)
-    if keys != expected:
-        fail("{} must use the same platforms as {}_urls for {}: got [{}], expected [{}].".format(
-            attr_name,
-            what,
-            what,
-            _format_platforms(keys),
-            _format_platforms(expected),
-        ))
+_PLATFORMS = ANDROID_PLATFORMS
 
 def _custom_platform_archives(rctx, urls, sha256s, strip_prefixes, what):
     if not urls or not sha256s:
@@ -133,11 +69,11 @@ def _custom_platform_archives(rctx, urls, sha256s, strip_prefixes, what):
             what,
             what,
         ))
-    _check_known_platforms(urls, "{}_urls".format(what), what)
+    _check_known_platforms(urls, "{}_urls".format(what), _PLATFORMS.keys(), what = what)
     platforms = sorted(urls.keys())
-    _check_matching_platforms(sha256s, "{}_sha256s".format(what), what, platforms)
+    _check_matching_platforms(sha256s, "{}_sha256s".format(what), platforms, what = what)
     if strip_prefixes:
-        _check_matching_platforms(strip_prefixes, "{}_strip_prefixes".format(what), what, platforms)
+        _check_matching_platforms(strip_prefixes, "{}_strip_prefixes".format(what), platforms, what = what)
     return urls, sha256s, strip_prefixes, platforms
 
 def _custom_archive_attrs(rctx):
@@ -178,11 +114,11 @@ def _resolve_known_sdk(rctx, data, known):
         fail("Unknown platform-tools version {} in SDK versions metadata.".format(repr(platform_tools_version)))
 
     build_tools = components["build_tools"][build_tools_version]
-    build_tools_urls, build_tools_sha256s, build_tools_strip_prefixes = _archive_attrs(build_tools["archives"])
+    build_tools_urls, build_tools_sha256s, build_tools_strip_prefixes = _archive_attrs(build_tools["archives"], include_strip_prefixes = True)
     build_tools_platforms = sorted(build_tools_urls.keys())
 
     platform_tools = components["platform_tools"][platform_tools_version]
-    platform_tools_urls, platform_tools_sha256s, platform_tools_strip_prefixes = _archive_attrs(platform_tools["archives"])
+    platform_tools_urls, platform_tools_sha256s, platform_tools_strip_prefixes = _archive_attrs(platform_tools["archives"], include_strip_prefixes = True)
     platform_tools_platforms = sorted(platform_tools_urls.keys())
 
     platform = known["platform"]
@@ -296,6 +232,8 @@ def _runner_script_content(rctx, name, platform, build_tools_directory, executab
     tool = "{}{}".format(name, executable_extension)
     tool_path = "build-tools/{}/{}/{}".format(platform, build_tools_directory, tool)
     libs = "build-tools/{}/{}".format(platform, build_tools_directory)
+
+    # buildifier: disable=external-path
     return """#!/usr/bin/env bash
 set -eu
 repo="${{RUNFILES_DIR:-${{0}}.runfiles}}/{repo_name}"
@@ -505,39 +443,15 @@ def _adb_alias_label(platform):
         return "platform-tools/windows/adb.exe"
     return "platform-tools/{}/adb".format(platform)
 
-def _select_alias(name, entries):
-    lines = [
-        "alias(",
-        "    name = \"{}\",".format(name),
-        "    actual = select({",
-    ]
-    for condition, actual in entries:
-        lines.append("        \"{}\": \"{}\",".format(condition, actual))
-    lines.extend([
-        "    }),",
-        "    tags = [\"manual\"],",
-        ")",
-    ])
-    return "\n".join(lines)
-
 def _platform_select_alias(name, platforms, linux, darwin, windows):
     entries = []
     if "linux" in platforms:
-        entries.append((":linux_x86_64_exec", linux))
+        entries.append((_platform_condition("linux"), linux))
     if "darwin" in platforms:
-        entries.append((":darwin_exec", darwin))
+        entries.append((_platform_condition("darwin"), darwin))
     if "windows" in platforms:
-        entries.append((":windows_x86_64_exec", windows))
-    return _select_alias(name, entries)
-
-def _platform_condition(platform):
-    if platform == "linux":
-        return ":linux_x86_64_exec"
-    if platform == "darwin":
-        return ":darwin_exec"
-    if platform == "windows":
-        return ":windows_x86_64_exec"
-    fail("Unsupported platform {}.".format(repr(platform)))
+        entries.append((_platform_condition("windows"), windows))
+    return _select_alias(name, entries, tags = ["manual"])
 
 def _platform_aliases(sdk):
     platforms = sdk["platforms"]
@@ -652,25 +566,11 @@ def _local_sdk_path_rule():
     srcs = ["."],
 )"""
 
-def _external_label(repository, target):
-    return "@{}//:{}".format(repository, target)
-
-def _platform_repository(rctx, platform):
-    if platform not in rctx.attr.platform_repositories:
-        fail("Missing platform repository for Android SDK platform {}. Got [{}].".format(
-            repr(platform),
-            _format_platforms(rctx.attr.platform_repositories.keys()),
-        ))
-    return rctx.attr.platform_repositories[platform]
-
-def _facade_label(rctx, platform, target):
-    return _external_label(_platform_repository(rctx, platform), target)
-
 def _facade_select_alias(rctx, sdk, name, target):
     return _select_alias(name, [
-        (_platform_condition(platform), _facade_label(rctx, platform, target))
+        (_platform_condition(platform), _external_label(_platform_repository(rctx, platform, "SDK"), target))
         for platform in sdk["platforms"]
-    ])
+    ], tags = ["manual"])
 
 def _facade_platform_aliases(rctx, sdk):
     blocks = [
@@ -689,7 +589,7 @@ def _facade_platform_aliases(rctx, sdk):
     return "\n\n".join(blocks)
 
 def _facade_platform_rules_for(rctx, platform, sdk):
-    repository = _platform_repository(rctx, platform)
+    repository = _platform_repository(rctx, platform, "SDK")
     sdk_name = "sdk_{}".format(platform)
     build_tools_version = sdk["build_tools_version"]
     blocks = []
@@ -791,7 +691,7 @@ def _hermetic_android_sdk_platform_repository_impl(rctx):
     if not rctx.attr.build_tools_version:
         fail("hermetic_android_sdk_platform_repository requires build_tools_version.")
 
-    _require_license(rctx)
+    _require_license(rctx, ANDROID_SDK_LICENSE_ENV, "SDK")
     sdk = _sdk_for_platform(_resolve_sdk(rctx), rctx.attr.platform)
     _download_sdk(rctx, sdk)
     _write_runner_scripts(rctx, sdk)
@@ -834,7 +734,7 @@ hermetic_android_sdk_platform_repository = repository_rule(
         "platforms_sha256": attr.string(),
         "platforms_strip_prefix": attr.string(),
         "platforms_url": attr.string(),
-        "platform": attr.string(mandatory = True, values = SDK_PLATFORMS),
+        "platform": attr.string(mandatory = True, values = sorted(_PLATFORMS.keys())),
         "version": attr.string(mandatory = True),
         "_versions_json": attr.label(
             default = SDK_VERSIONS,
@@ -850,7 +750,7 @@ def _hermetic_android_sdk_repository_impl(rctx):
     if not rctx.attr.build_tools_version:
         fail("hermetic_android_sdk_repository requires build_tools_version.")
 
-    _require_license(rctx)
+    _require_license(rctx, ANDROID_SDK_LICENSE_ENV, "SDK")
     sdk = _resolve_sdk(rctx)
     _download_component(
         rctx,
