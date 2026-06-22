@@ -58,8 +58,6 @@ SDK_TAG = tag_class(attrs = {
     ),
 })
 
-_PLATFORMS = ANDROID_PLATFORMS
-
 def _custom_platform_archives(rctx, urls, sha256s, strip_prefixes, what):
     if not urls or not sha256s:
         fail("Custom {} archives for Android SDK version {} require both {}_urls and {}_sha256s.".format(
@@ -273,7 +271,7 @@ def _platform_tool(platform, build_tools_directory, tool):
 
 def _platform_rules_for(platform, sdk):
     build_tools_directory = sdk["build_tools_directory"]
-    executable_extension = _PLATFORMS[platform]["executable_extension"]
+    executable_extension = ANDROID_PLATFORMS[platform]["executable_extension"]
     blocks = []
 
     blocks.append("""filegroup(
@@ -354,7 +352,7 @@ android_toolchain(
         zipalign = _platform_tool(platform, build_tools_directory, "zipalign"),
     ))
 
-    for constraint_name, constraints in _PLATFORMS[platform]["constraints"]:
+    for constraint_name, constraints in ANDROID_PLATFORMS[platform]["constraints"]:
         local_name = constraint_name if platform == "darwin" else platform
         blocks.append("""toolchain(
     name = "sdk_{local_name}_toolchain",
@@ -618,7 +616,7 @@ android_toolchain(
         sdk_name = sdk_name,
     ))
 
-    for constraint_name, constraints in _PLATFORMS[platform]["constraints"]:
+    for constraint_name, constraints in ANDROID_PLATFORMS[platform]["constraints"]:
         local_name = constraint_name if platform == "darwin" else platform
         blocks.append("""toolchain(
     name = "sdk_{local_name}_toolchain",
@@ -657,7 +655,7 @@ def _write_runner_scripts(rctx, sdk):
         if platform == "windows":
             continue
         build_tools_directory = sdk["build_tools_directory"]
-        executable_extension = _PLATFORMS[platform]["executable_extension"]
+        executable_extension = ANDROID_PLATFORMS[platform]["executable_extension"]
         for tool in ["aapt", "aapt2", "aidl", "dexdump", "zipalign"]:
             rctx.file(
                 "tools/{}_{}.sh".format(tool, platform),
@@ -708,7 +706,7 @@ hermetic_android_sdk_platform_repository = repository_rule(
         "platforms_sha256": attr.string(),
         "platforms_strip_prefix": attr.string(),
         "platforms_url": attr.string(),
-        "platform": attr.string(mandatory = True, values = sorted(_PLATFORMS.keys())),
+        "platform": attr.string(mandatory = True, values = sorted(ANDROID_PLATFORMS.keys())),
         "version": attr.string(mandatory = True),
         "_versions_json": attr.label(
             default = Label("//sdk:versions.json"),
