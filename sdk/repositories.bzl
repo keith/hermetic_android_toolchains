@@ -69,7 +69,7 @@ def _custom_platform_archives(rctx, urls, sha256s, strip_prefixes, what):
             what,
             what,
         ))
-    _check_known_platforms(urls, "{}_urls".format(what), _PLATFORMS.keys(), what = what)
+    _check_known_platforms(urls, "{}_urls".format(what), what = what)
     platforms = sorted(urls.keys())
     _check_matching_platforms(sha256s, "{}_sha256s".format(what), platforms, what = what)
     if strip_prefixes:

@@ -52,14 +52,12 @@ def _platforms():
 
 _PLATFORMS = _platforms()
 
-NDK_PLATFORMS = sorted(_PLATFORMS.keys())
-
 def _custom_archives(rctx):
     if not rctx.attr.urls or not rctx.attr.sha256s:
         fail("Custom Android NDK archives for version {} require both urls and sha256s.".format(repr(rctx.attr.version)))
     if not rctx.attr.strip_prefix:
         fail("Custom Android NDK archives for version {} require strip_prefix.".format(repr(rctx.attr.version)))
-    _check_known_platforms(rctx.attr.urls, "urls", _PLATFORMS.keys())
+    _check_known_platforms(rctx.attr.urls, "urls")
     platforms = sorted(rctx.attr.urls.keys())
     _check_matching_platforms(rctx.attr.sha256s, "sha256s", platforms)
     return {
@@ -78,7 +76,7 @@ def _resolve_ndk(rctx):
         ndk = _custom_archives(rctx)
     elif rctx.attr.version in versions:
         known = versions[rctx.attr.version]
-        urls, sha256s = _archive_attrs(known["archives"])
+        urls, sha256s = _archive_attrs(known["archives"], include_strip_prefixes = False)
         ndk = {
             "platforms": sorted(urls.keys()),
             "sha256s": sha256s,
@@ -249,7 +247,7 @@ hermetic_android_ndk_platform_repository = repository_rule(
     implementation = _hermetic_android_ndk_platform_repository_impl,
     attrs = {
         "api_level": attr.int(),
-        "platform": attr.string(mandatory = True, values = NDK_PLATFORMS),
+        "platform": attr.string(mandatory = True, values = sorted(_PLATFORMS.keys())),
         "sha256s": attr.string_dict(),
         "strip_prefix": attr.string(),
         "urls": attr.string_dict(),

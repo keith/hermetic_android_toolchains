@@ -50,7 +50,7 @@ def archive_url(archive):
         return archive["url"]
     return "https://dl.google.com/android/repository/{}".format(archive["file"])
 
-def archive_attrs(archives, include_strip_prefixes = False):
+def archive_attrs(archives, include_strip_prefixes):
     """Splits archive metadata into URL, SHA-256, and optional strip-prefix maps.
 
     Args:
@@ -76,16 +76,16 @@ def format_platforms(platforms):
     """Formats platform names for diagnostics."""
     return ", ".join(sorted(platforms))
 
-def check_known_platforms(values, attr_name, valid_platforms, what = ""):
+def check_known_platforms(values, attr_name, what = ""):
     """Fails if an attribute map contains unsupported platform keys.
 
     Args:
       values: Attribute map keyed by platform.
       attr_name: Attribute name to use in diagnostics.
-      valid_platforms: Supported platform names.
       what: Optional component name to use in diagnostics.
     """
     keys = sorted(values.keys())
+    valid_platforms = ANDROID_PLATFORMS.keys()
     unknown = [platform for platform in keys if platform not in valid_platforms]
     if unknown:
         if what:
