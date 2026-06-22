@@ -85,6 +85,7 @@ action_command_line_test = analysistest.make(
         "not_expected_argv": attr.string_list(),
     },
     config_settings = {
+        # buildifier: disable=canonical-repository
         "//command_line_option:platforms": "@@rules_android+//:x86_64",
     },
 )
