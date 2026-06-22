@@ -13,10 +13,7 @@ exports_files([
 
 cc_library(
     name = "cpufeatures",
-    srcs = glob([
-        "ndk/sources/android/cpufeatures/*.c",
-        "sources/android/cpufeatures/*.c",
-    ]),
+    srcs = glob(["sources/android/cpufeatures/*.c"]),
     hdrs = glob([
         "ndk/sources/android/cpufeatures/*.h",
         "sources/android/cpufeatures/*.h",
@@ -28,10 +25,7 @@ cc_library(
 # https://developer.android.com/games/agdk/game-activity
 cc_library(
     name = "native_app_glue",
-    srcs = glob([
-        "ndk/sources/android/native_app_glue/*.c",
-        "sources/android/native_app_glue/*.c",
-    ]),
+    srcs = glob(["sources/android/native_app_glue/*.c"]),
     hdrs = glob([
         "ndk/sources/android/native_app_glue/*.h",
         "sources/android/native_app_glue/*.h",
