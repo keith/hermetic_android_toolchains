@@ -495,52 +495,17 @@ def _platform_redirect_aliases(rctx, sdk):
 
 def _platform_redirect_rules_for(rctx, platform, sdk):
     repository = platform_repository(rctx, platform, "SDK")
-    sdk_name = "sdk_{}".format(platform)
-    build_tools_version = sdk["build_tools_version"]
     blocks = []
 
-    blocks.append("""android_sdk(
-    name = "{sdk_name}",
-    aapt = "@{repository}//:aapt",
-    aapt2 = "@{repository}//:aapt2",
-    adb = "@{repository}//:adb",
-    aidl = "@{repository}//:aidl",
-    android_jar = "platforms/android-{api_level}/android.jar",
-    apksigner = "@{repository}//:apksigner",
-    build_tools_version = "{build_tools_version}",
-    dexdump = "@{repository}//:dexdump",
-    dx = select({{
-        ":dx_standalone_dexer": ":fail",
-        "//conditions:default": ":d8_compat_dx",
-    }}),
-    framework_aidl = "platforms/android-{api_level}/framework.aidl",
-    legacy_main_dex_list_generator = ":generate_main_dex_list",
-    main_dex_classes = "@{repository}//:main_dex_classes",
-    main_dex_list_creator = ":main_dex_list_creator",
-    proguard = select({{
-        ":disallow_proguard": ":fail",
-        "//conditions:default": "@remote_java_tools//:proguard",
-    }}),
-    source_properties = "platforms/android-{api_level}/source.properties",
-    tags = [
-        "__ANDROID_RULES_MIGRATION__",
-        "manual",
-    ],
-    zipalign = "@{repository}//:zipalign",
-)
-
-android_toolchain(
+    blocks.append("""android_toolchain(
     name = "android_default_{platform}",
     aapt2 = "@{repository}//:aapt2",
     adb = "@{repository}//:adb",
     tags = ["manual"],
 )
 """.format(
-        api_level = sdk["api_level"],
-        build_tools_version = build_tools_version,
         platform = platform,
         repository = repository,
-        sdk_name = sdk_name,
     ))
 
     for constraint_name, constraints in ANDROID_PLATFORMS[platform]["constraints"]:
@@ -548,14 +513,14 @@ android_toolchain(
         blocks.append("""toolchain(
     name = "sdk_{local_name}_toolchain",
     exec_compatible_with = {constraints},
-    toolchain = ":{sdk_name}",
+    toolchain = ":sdk",
     toolchain_type = ":sdk_toolchain_type",
 )
 
 toolchain(
     name = "rules_android_sdk_{local_name}_toolchain",
     exec_compatible_with = {constraints},
-    toolchain = ":{sdk_name}",
+    toolchain = ":sdk",
     toolchain_type = "@rules_android//toolchains/android_sdk:toolchain_type",
 )
 
@@ -569,7 +534,6 @@ toolchain(
             constraints = repr(constraints),
             platform = platform,
             local_name = local_name,
-            sdk_name = sdk_name,
         ))
 
     return "\n".join(blocks)
