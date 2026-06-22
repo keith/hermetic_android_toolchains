@@ -129,13 +129,13 @@ def _ndk_for_platform(ndk, platform):
     platform_ndk["platforms"] = [platform]
     return platform_ndk
 
-def _facade_ndk_select_alias(rctx, ndk, name, target):
+def _platform_redirect_alias(rctx, ndk, name, target):
     return _select_alias(name, [
         (_platform_condition(platform), _external_label(_platform_repository(rctx, platform, "NDK"), target))
         for platform in ndk["platforms"]
     ])
 
-def _facade_platform_toolchains(rctx, ndk):
+def _platform_redirect_toolchains(rctx, ndk):
     toolchains = []
     for platform in ndk["platforms"]:
         repository = _platform_repository(rctx, platform, "NDK")
@@ -145,7 +145,7 @@ def _facade_platform_toolchains(rctx, ndk):
             toolchains.append((name, toolchain_pattern, constraints))
     return repr(toolchains)
 
-def _facade_toolchain_suite_alias(rctx, ndk):
+def _platform_redirect_toolchain_suite_alias(rctx, ndk):
     return _select_alias("toolchain", [
         (
             _platform_condition(platform),
@@ -157,14 +157,14 @@ def _facade_toolchain_suite_alias(rctx, ndk):
         for platform in ndk["platforms"]
     ])
 
-def _facade_build_file_content(rctx, ndk):
+def _platform_redirect_build_file_content(rctx, ndk):
     aliases = [
-        _facade_toolchain_suite_alias(rctx, ndk),
-        _facade_ndk_select_alias(rctx, ndk, "cpufeatures", "cpufeatures"),
-        _facade_ndk_select_alias(rctx, ndk, "native_app_glue", "native_app_glue"),
-        _facade_ndk_select_alias(rctx, ndk, "sources/android/native_app_glue/android_native_app_glue.h", "sources/android/native_app_glue/android_native_app_glue.h"),
+        _platform_redirect_toolchain_suite_alias(rctx, ndk),
+        _platform_redirect_alias(rctx, ndk, "cpufeatures", "cpufeatures"),
+        _platform_redirect_alias(rctx, ndk, "native_app_glue", "native_app_glue"),
+        _platform_redirect_alias(rctx, ndk, "sources/android/native_app_glue/android_native_app_glue.h", "sources/android/native_app_glue/android_native_app_glue.h"),
     ]
-    return """\"\"\"Generated Android NDK facade repository.\"\"\"
+    return """\"\"\"Generated Android NDK platform redirect repository.\"\"\"
 
 load("//:platform_toolchains.bzl", "PLATFORM_TOOLCHAINS")
 load("//:target_systems.bzl", "CPU_CONSTRAINT", "TARGET_SYSTEM_NAMES")
@@ -285,9 +285,9 @@ def _hermetic_android_ndk_repository_impl(rctx):
 
     rctx.file(
         "platform_toolchains.bzl",
-        "PLATFORM_TOOLCHAINS = {}\n".format(_facade_platform_toolchains(rctx, ndk)),
+        "PLATFORM_TOOLCHAINS = {}\n".format(_platform_redirect_toolchains(rctx, ndk)),
     )
-    rctx.file("BUILD.bazel", _facade_build_file_content(rctx, ndk))
+    rctx.file("BUILD.bazel", _platform_redirect_build_file_content(rctx, ndk))
     rctx.template(
         "target_systems.bzl",
         rctx.attr._template_target_systems,

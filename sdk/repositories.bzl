@@ -547,29 +547,29 @@ def _sdk_for_platform(sdk, platform):
     platform_sdk["platforms"] = [platform]
     return platform_sdk
 
-def _facade_select_alias(rctx, sdk, name, target):
+def _platform_redirect_alias(rctx, sdk, name, target):
     return _select_alias(name, [
         (_platform_condition(platform), _external_label(_platform_repository(rctx, platform, "SDK"), target))
         for platform in sdk["platforms"]
     ], tags = ["manual"])
 
-def _facade_platform_aliases(rctx, sdk):
+def _platform_redirect_aliases(rctx, sdk):
     blocks = [
-        _facade_select_alias(rctx, sdk, "aapt", "aapt"),
-        _facade_select_alias(rctx, sdk, "aapt2", "aapt2"),
-        _facade_select_alias(rctx, sdk, "aapt2_binary", "aapt2_binary"),
-        _facade_select_alias(rctx, sdk, "aidl", "aidl"),
-        _facade_select_alias(rctx, sdk, "adb", "adb"),
-        _facade_select_alias(rctx, sdk, "platform-tools/adb", "platform-tools/adb"),
-        _facade_select_alias(rctx, sdk, "apksigner", "apksigner"),
-        _facade_select_alias(rctx, sdk, "dexdump", "dexdump"),
-        _facade_select_alias(rctx, sdk, "main_dex_classes", "main_dex_classes"),
-        _facade_select_alias(rctx, sdk, "zipalign", "zipalign"),
-        _facade_select_alias(rctx, sdk, "zipalign_binary", "zipalign_binary"),
+        _platform_redirect_alias(rctx, sdk, "aapt", "aapt"),
+        _platform_redirect_alias(rctx, sdk, "aapt2", "aapt2"),
+        _platform_redirect_alias(rctx, sdk, "aapt2_binary", "aapt2_binary"),
+        _platform_redirect_alias(rctx, sdk, "aidl", "aidl"),
+        _platform_redirect_alias(rctx, sdk, "adb", "adb"),
+        _platform_redirect_alias(rctx, sdk, "platform-tools/adb", "platform-tools/adb"),
+        _platform_redirect_alias(rctx, sdk, "apksigner", "apksigner"),
+        _platform_redirect_alias(rctx, sdk, "dexdump", "dexdump"),
+        _platform_redirect_alias(rctx, sdk, "main_dex_classes", "main_dex_classes"),
+        _platform_redirect_alias(rctx, sdk, "zipalign", "zipalign"),
+        _platform_redirect_alias(rctx, sdk, "zipalign_binary", "zipalign_binary"),
     ]
     return "\n\n".join(blocks)
 
-def _facade_platform_rules_for(rctx, platform, sdk):
+def _platform_redirect_rules_for(rctx, platform, sdk):
     repository = _platform_repository(rctx, platform, "SDK")
     sdk_name = "sdk_{}".format(platform)
     build_tools_version = sdk["build_tools_version"]
@@ -650,8 +650,8 @@ toolchain(
 
     return "\n".join(blocks)
 
-def _facade_platform_rules(rctx, sdk):
-    return "\n".join([_facade_platform_rules_for(rctx, platform, sdk) for platform in sdk["platforms"]])
+def _platform_redirect_rules(rctx, sdk):
+    return "\n".join([_platform_redirect_rules_for(rctx, platform, sdk) for platform in sdk["platforms"]])
 
 def _write_runner_scripts(rctx, sdk):
     for platform in sdk["platforms"]:
@@ -743,8 +743,8 @@ def _hermetic_android_sdk_repository_impl(rctx):
             "%{api_level}": sdk["api_level"],
             "%{build_tools_directory}": sdk["build_tools_directory"],
             "%{build_tools_version}": sdk["build_tools_version"],
-            "%{platform_aliases}": _facade_platform_aliases(rctx, sdk),
-            "%{platform_rules}": _facade_platform_rules(rctx, sdk),
+            "%{platform_aliases}": _platform_redirect_aliases(rctx, sdk),
+            "%{platform_rules}": _platform_redirect_rules(rctx, sdk),
             "%{optional_java_imports}": _optional_java_imports(sdk["api_level"]),
         },
     )

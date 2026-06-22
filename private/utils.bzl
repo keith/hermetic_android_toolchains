@@ -140,7 +140,7 @@ def external_label(repository, target):
     return "@{}//:{}".format(repository, target)
 
 def platform_repository(rctx, platform, component):
-    """Returns the configured platform repository name for a facade repository."""
+    """Returns the configured platform repository name for a redirecting repository."""
     if platform not in rctx.attr.platform_repositories:
         fail("Missing platform repository for Android {} platform {}. Got [{}].".format(
             component,
