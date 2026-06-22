@@ -33,8 +33,8 @@ Once you have reviewed and accepted the SDK and NDK licenses, add this
 to your `.bazelrc` for the versions of the licenses you accepted:
 
 ```
-common --repo_env=ACCEPTED_ANDROID_SDK_LICENSE_VERSION=35
-common --repo_env=ACCEPTED_ANDROID_NDK_LICENSE_VERSION=r25c
+common --repo_env=ACCEPTED_ANDROID_SDK_LICENSE_VERSION=37.0
+common --repo_env=ACCEPTED_ANDROID_NDK_LICENSE_VERSION=r29
 ```
 
 SDK, build-tools, and NDK versions are explicit. Use
