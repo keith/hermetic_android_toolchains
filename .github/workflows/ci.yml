@@ -6,6 +6,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 env:
   BUILDBUDDY_API_KEY: ${{ secrets.BUILDBUDDY_API_KEY }}
 
