@@ -233,7 +233,6 @@ def _hermetic_android_ndk_repository_impl(rctx):
         fail("hermetic_android_ndk_repository requires version.")
 
     require_license(rctx, ANDROID_NDK_LICENSE_ENV, "NDK")
-    ndk = _resolve_ndk(rctx)
 
     rctx.symlink(Label("//ndk:BUILD.ndkredirect.bazel"), "BUILD.bazel")
     rctx.template(
