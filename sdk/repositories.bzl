@@ -1,5 +1,19 @@
 """Repository rule for downloading a hermetic Android SDK."""
 
+load(
+    "//private:utils.bzl",
+    "ANDROID_PLATFORMS",
+    _archive_attrs = "archive_attrs",
+    _archive_url = "archive_url",
+    _check_known_platforms = "check_known_platforms",
+    _check_matching_platforms = "check_matching_platforms",
+    _external_label = "external_label",
+    _format_platforms = "format_platforms",
+    _platform_condition = "platform_condition",
+    _platform_repository = "platform_repository",
+    _require_license = "require_license",
+    _select_alias = "select_alias",
+)
 load("//sdk:versions.bzl", "SDK_VERSIONS")
 
 ANDROID_SDK_LICENSE_ENV = "ACCEPTED_ANDROID_SDK_LICENSE_VERSION"
@@ -45,83 +59,7 @@ SDK_TAG = tag_class(attrs = {
     ),
 })
 
-_PLATFORMS = {
-    "darwin": {
-        "constraints": [
-            ("darwin", ["@platforms//os:macos"]),
-        ],
-        "executable_extension": "",
-    },
-    "linux": {
-        "constraints": [
-            ("linux", ["@platforms//os:linux", "@platforms//cpu:x86_64"]),
-        ],
-        "executable_extension": "",
-    },
-    "windows": {
-        "constraints": [
-            ("windows", ["@platforms//os:windows", "@platforms//cpu:x86_64"]),
-        ],
-        "executable_extension": ".exe",
-    },
-}
-
-def _require_license(rctx):
-    value = rctx.getenv(ANDROID_SDK_LICENSE_ENV)
-    if value != rctx.attr.version:
-        fail("""\
-Before using the hermetic Android SDK toolchain you must read and accept the license for the current version. Once you have done so, add this in your '.bazelrc':
-
-common --repo_env={}={}
-
-Current {} value was {}.""".format(
-            ANDROID_SDK_LICENSE_ENV,
-            rctx.attr.version,
-            ANDROID_SDK_LICENSE_ENV,
-            value or "unset",
-        ))
-
-def _archive_url(archive):
-    if archive.get("url"):
-        return archive["url"]
-    return "https://dl.google.com/android/repository/{}".format(archive["file"])
-
-def _archive_attrs(archives):
-    urls = {}
-    sha256s = {}
-    strip_prefixes = {}
-    for platform, archive in archives.items():
-        urls[platform] = _archive_url(archive)
-        sha256s[platform] = archive["sha256"]
-        if archive.get("strip_prefix"):
-            strip_prefixes[platform] = archive["strip_prefix"]
-    return urls, sha256s, strip_prefixes
-
-def _format_platforms(platforms):
-    return ", ".join(sorted(platforms))
-
-def _check_known_platforms(values, attr_name, what):
-    keys = sorted(values.keys())
-    unknown = [platform for platform in keys if platform not in _PLATFORMS]
-    if unknown:
-        fail("{} contains unsupported platforms for {}: [{}]. Expected keys from [{}].".format(
-            attr_name,
-            what,
-            _format_platforms(unknown),
-            _format_platforms(_PLATFORMS.keys()),
-        ))
-
-def _check_matching_platforms(values, attr_name, what, platforms):
-    keys = sorted(values.keys())
-    expected = sorted(platforms)
-    if keys != expected:
-        fail("{} must use the same platforms as {}_urls for {}: got [{}], expected [{}].".format(
-            attr_name,
-            what,
-            what,
-            _format_platforms(keys),
-            _format_platforms(expected),
-        ))
+_PLATFORMS = ANDROID_PLATFORMS
 
 def _custom_platform_archives(rctx, urls, sha256s, strip_prefixes, what):
     if not urls or not sha256s:
@@ -131,11 +69,11 @@ def _custom_platform_archives(rctx, urls, sha256s, strip_prefixes, what):
             what,
             what,
         ))
-    _check_known_platforms(urls, "{}_urls".format(what), what)
+    _check_known_platforms(urls, "{}_urls".format(what), what = what)
     platforms = sorted(urls.keys())
-    _check_matching_platforms(sha256s, "{}_sha256s".format(what), what, platforms)
+    _check_matching_platforms(sha256s, "{}_sha256s".format(what), platforms, what = what)
     if strip_prefixes:
-        _check_matching_platforms(strip_prefixes, "{}_strip_prefixes".format(what), what, platforms)
+        _check_matching_platforms(strip_prefixes, "{}_strip_prefixes".format(what), platforms, what = what)
     return urls, sha256s, strip_prefixes, platforms
 
 def _custom_archive_attrs(rctx):
@@ -176,11 +114,11 @@ def _resolve_known_sdk(rctx, data, known):
         fail("Unknown platform-tools version {} in SDK versions metadata.".format(repr(platform_tools_version)))
 
     build_tools = components["build_tools"][build_tools_version]
-    build_tools_urls, build_tools_sha256s, build_tools_strip_prefixes = _archive_attrs(build_tools["archives"])
+    build_tools_urls, build_tools_sha256s, build_tools_strip_prefixes = _archive_attrs(build_tools["archives"], include_strip_prefixes = True)
     build_tools_platforms = sorted(build_tools_urls.keys())
 
     platform_tools = components["platform_tools"][platform_tools_version]
-    platform_tools_urls, platform_tools_sha256s, platform_tools_strip_prefixes = _archive_attrs(platform_tools["archives"])
+    platform_tools_urls, platform_tools_sha256s, platform_tools_strip_prefixes = _archive_attrs(platform_tools["archives"], include_strip_prefixes = True)
     platform_tools_platforms = sorted(platform_tools_urls.keys())
 
     platform = known["platform"]
@@ -294,6 +232,8 @@ def _runner_script_content(rctx, name, platform, build_tools_directory, executab
     tool = "{}{}".format(name, executable_extension)
     tool_path = "build-tools/{}/{}/{}".format(platform, build_tools_directory, tool)
     libs = "build-tools/{}/{}".format(platform, build_tools_directory)
+
+    # buildifier: disable=external-path
     return """#!/usr/bin/env bash
 set -eu
 repo="${{RUNFILES_DIR:-${{0}}.runfiles}}/{repo_name}"
@@ -327,12 +267,12 @@ def _script_runner(name, platform, build_tools_directory):
         tool_path = tool_path,
     )
 
-def _platform_tool(platform, build_tools_directory, tool, executable_extension):
+def _platform_tool(platform, build_tools_directory, tool):
     if platform == "windows":
         return "\"build-tools/windows/{}/{}.exe\"".format(build_tools_directory, tool)
     return "\":{}_{}\"".format(tool, platform)
 
-def _platform_rules_for(rctx, platform, sdk):
+def _platform_rules_for(platform, sdk):
     build_tools_directory = sdk["build_tools_directory"]
     executable_extension = _PLATFORMS[platform]["executable_extension"]
     blocks = []
@@ -402,17 +342,17 @@ android_toolchain(
     translation_merger = ":fail",
 )
 """.format(
-        aapt = _platform_tool(platform, build_tools_directory, "aapt", executable_extension),
-        aapt2 = _platform_tool(platform, build_tools_directory, "aapt2", executable_extension),
+        aapt = _platform_tool(platform, build_tools_directory, "aapt"),
+        aapt2 = _platform_tool(platform, build_tools_directory, "aapt2"),
         adb = adb,
-        aidl = _platform_tool(platform, build_tools_directory, "aidl", executable_extension),
+        aidl = _platform_tool(platform, build_tools_directory, "aidl"),
         api_level = sdk["api_level"],
         build_tools_directory = build_tools_directory,
         build_tools_version = sdk["build_tools_version"],
-        dexdump = _platform_tool(platform, build_tools_directory, "dexdump", executable_extension),
+        dexdump = _platform_tool(platform, build_tools_directory, "dexdump"),
         platform = platform,
         sdk_name = sdk_name,
-        zipalign = _platform_tool(platform, build_tools_directory, "zipalign", executable_extension),
+        zipalign = _platform_tool(platform, build_tools_directory, "zipalign"),
     ))
 
     for constraint_name, constraints in _PLATFORMS[platform]["constraints"]:
@@ -490,8 +430,8 @@ alias(
 """.format(api_level = api_level))
     return "\n".join(blocks)
 
-def _platform_rules(rctx, sdk):
-    return "\n".join([_platform_rules_for(rctx, platform, sdk) for platform in sdk["platforms"]])
+def _platform_rules(sdk):
+    return "\n".join([_platform_rules_for(platform, sdk) for platform in sdk["platforms"]])
 
 def _tool_alias_label(platform, build_tools_directory, tool):
     if platform == "windows":
@@ -503,30 +443,15 @@ def _adb_alias_label(platform):
         return "platform-tools/windows/adb.exe"
     return "platform-tools/{}/adb".format(platform)
 
-def _select_alias(name, entries):
-    lines = [
-        "alias(",
-        "    name = \"{}\",".format(name),
-        "    actual = select({",
-    ]
-    for condition, actual in entries:
-        lines.append("        \"{}\": \"{}\",".format(condition, actual))
-    lines.extend([
-        "    }),",
-        "    tags = [\"manual\"],",
-        ")",
-    ])
-    return "\n".join(lines)
-
 def _platform_select_alias(name, platforms, linux, darwin, windows):
     entries = []
     if "linux" in platforms:
-        entries.append((":linux_x86_64_exec", linux))
+        entries.append((_platform_condition("linux"), linux))
     if "darwin" in platforms:
-        entries.append((":darwin_exec", darwin))
+        entries.append((_platform_condition("darwin"), darwin))
     if "windows" in platforms:
-        entries.append((":windows_x86_64_exec", windows))
-    return _select_alias(name, entries)
+        entries.append((_platform_condition("windows"), windows))
+    return _select_alias(name, entries, tags = ["manual"])
 
 def _platform_aliases(sdk):
     platforms = sdk["platforms"]
@@ -612,6 +537,122 @@ def _platform_aliases(sdk):
     ]
     return "\n\n".join(blocks)
 
+def _sdk_for_platform(sdk, platform):
+    if platform not in sdk["platforms"]:
+        fail("Android SDK archives are not available for platform {}. Available platforms: [{}].".format(
+            repr(platform),
+            _format_platforms(sdk["platforms"]),
+        ))
+    platform_sdk = dict(sdk)
+    platform_sdk["platforms"] = [platform]
+    return platform_sdk
+
+def _platform_redirect_alias(rctx, sdk, name, target):
+    return _select_alias(name, [
+        (_platform_condition(platform), _external_label(_platform_repository(rctx, platform, "SDK"), target))
+        for platform in sdk["platforms"]
+    ], tags = ["manual"])
+
+def _platform_redirect_aliases(rctx, sdk):
+    blocks = [
+        _platform_redirect_alias(rctx, sdk, "aapt", "aapt"),
+        _platform_redirect_alias(rctx, sdk, "aapt2", "aapt2"),
+        _platform_redirect_alias(rctx, sdk, "aapt2_binary", "aapt2_binary"),
+        _platform_redirect_alias(rctx, sdk, "aidl", "aidl"),
+        _platform_redirect_alias(rctx, sdk, "adb", "adb"),
+        _platform_redirect_alias(rctx, sdk, "platform-tools/adb", "platform-tools/adb"),
+        _platform_redirect_alias(rctx, sdk, "apksigner", "apksigner"),
+        _platform_redirect_alias(rctx, sdk, "dexdump", "dexdump"),
+        _platform_redirect_alias(rctx, sdk, "main_dex_classes", "main_dex_classes"),
+        _platform_redirect_alias(rctx, sdk, "zipalign", "zipalign"),
+        _platform_redirect_alias(rctx, sdk, "zipalign_binary", "zipalign_binary"),
+    ]
+    return "\n\n".join(blocks)
+
+def _platform_redirect_rules_for(rctx, platform, sdk):
+    repository = _platform_repository(rctx, platform, "SDK")
+    sdk_name = "sdk_{}".format(platform)
+    build_tools_version = sdk["build_tools_version"]
+    blocks = []
+
+    blocks.append("""android_sdk(
+    name = "{sdk_name}",
+    aapt = "@{repository}//:aapt",
+    aapt2 = "@{repository}//:aapt2",
+    adb = "@{repository}//:adb",
+    aidl = "@{repository}//:aidl",
+    android_jar = "platforms/android-{api_level}/android.jar",
+    apksigner = "@{repository}//:apksigner",
+    build_tools_version = "{build_tools_version}",
+    dexdump = "@{repository}//:dexdump",
+    dx = ":d8_compat_dx",
+    framework_aidl = "platforms/android-{api_level}/framework.aidl",
+    legacy_main_dex_list_generator = ":generate_main_dex_list",
+    main_dex_classes = "@{repository}//:main_dex_classes",
+    main_dex_list_creator = ":main_dex_list_creator",
+    proguard = "@remote_java_tools//:proguard",
+    source_properties = "platforms/android-{api_level}/source.properties",
+    tags = ["__ANDROID_RULES_MIGRATION__"],
+    zipalign = "@{repository}//:zipalign",
+)
+
+android_toolchain(
+    name = "android_default_{platform}",
+    aapt2 = "@{repository}//:aapt2",
+    adb = "@{repository}//:adb",
+    android_archive_jar_optimization_inputs_validator = ":fail",
+    android_archive_packages_validator = ":fail",
+    apk_to_bundle_tool = ":fail",
+    centralize_r_class_tool = ":fail",
+    desugar_globals_jar = ":fail",
+    merge_baseline_profiles_tool = ":fail",
+    object_method_rewriter = ":fail",
+    profgen = ":fail",
+    proto_map_generator = ":fail",
+    translation_merger = ":fail",
+)
+""".format(
+        api_level = sdk["api_level"],
+        build_tools_version = build_tools_version,
+        platform = platform,
+        repository = repository,
+        sdk_name = sdk_name,
+    ))
+
+    for constraint_name, constraints in _PLATFORMS[platform]["constraints"]:
+        local_name = constraint_name if platform == "darwin" else platform
+        blocks.append("""toolchain(
+    name = "sdk_{local_name}_toolchain",
+    exec_compatible_with = {constraints},
+    toolchain = ":{sdk_name}",
+    toolchain_type = ":sdk_toolchain_type",
+)
+
+toolchain(
+    name = "rules_android_sdk_{local_name}_toolchain",
+    exec_compatible_with = {constraints},
+    toolchain = ":{sdk_name}",
+    toolchain_type = "@rules_android//toolchains/android_sdk:toolchain_type",
+)
+
+toolchain(
+    name = "android_default_{local_name}_toolchain",
+    exec_compatible_with = {constraints},
+    toolchain = ":android_default_{platform}",
+    toolchain_type = "@rules_android//toolchains/android:toolchain_type",
+)
+""".format(
+            constraints = repr(constraints),
+            platform = platform,
+            local_name = local_name,
+            sdk_name = sdk_name,
+        ))
+
+    return "\n".join(blocks)
+
+def _platform_redirect_rules(rctx, sdk):
+    return "\n".join([_platform_redirect_rules_for(rctx, platform, sdk) for platform in sdk["platforms"]])
+
 def _write_runner_scripts(rctx, sdk):
     for platform in sdk["platforms"]:
         if platform == "windows":
@@ -625,14 +666,14 @@ def _write_runner_scripts(rctx, sdk):
                 executable = True,
             )
 
-def _hermetic_android_sdk_repository_impl(rctx):
+def _hermetic_android_sdk_platform_repository_impl(rctx):
     if not rctx.attr.version:
-        fail("hermetic_android_sdk_repository requires version.")
+        fail("hermetic_android_sdk_platform_repository requires version.")
     if not rctx.attr.build_tools_version:
-        fail("hermetic_android_sdk_repository requires build_tools_version.")
+        fail("hermetic_android_sdk_platform_repository requires build_tools_version.")
 
-    _require_license(rctx)
-    sdk = _resolve_sdk(rctx)
+    _require_license(rctx, ANDROID_SDK_LICENSE_ENV, "SDK")
+    sdk = _sdk_for_platform(_resolve_sdk(rctx), rctx.attr.platform)
     _download_sdk(rctx, sdk)
     _write_runner_scripts(rctx, sdk)
 
@@ -645,7 +686,65 @@ def _hermetic_android_sdk_repository_impl(rctx):
             "%{build_tools_directory}": sdk["build_tools_directory"],
             "%{build_tools_version}": sdk["build_tools_version"],
             "%{platform_aliases}": _platform_aliases(sdk),
-            "%{platform_rules}": _platform_rules(rctx, sdk),
+            "%{platform_rules}": _platform_rules(sdk),
+            "%{optional_java_imports}": _optional_java_imports(sdk["api_level"]),
+        },
+    )
+
+    if hasattr(rctx, "repo_metadata"):
+        return rctx.repo_metadata(reproducible = True)
+    return None
+
+hermetic_android_sdk_platform_repository = repository_rule(
+    implementation = _hermetic_android_sdk_platform_repository_impl,
+    attrs = {
+        "api_level": attr.string(),
+        "build_tools_directory": attr.string(),
+        "build_tools_sha256s": attr.string_dict(),
+        "build_tools_strip_prefixes": attr.string_dict(),
+        "build_tools_urls": attr.string_dict(),
+        "build_tools_version": attr.string(mandatory = True),
+        "platform_tools_sha256s": attr.string_dict(),
+        "platform_tools_urls": attr.string_dict(),
+        "platforms_sha256": attr.string(),
+        "platforms_strip_prefix": attr.string(),
+        "platforms_url": attr.string(),
+        "platform": attr.string(mandatory = True, values = sorted(_PLATFORMS.keys())),
+        "version": attr.string(mandatory = True),
+        "_versions_json": attr.label(
+            default = SDK_VERSIONS,
+            allow_single_file = True,
+        ),
+    },
+    environ = [ANDROID_SDK_LICENSE_ENV],
+)
+
+def _hermetic_android_sdk_repository_impl(rctx):
+    if not rctx.attr.version:
+        fail("hermetic_android_sdk_repository requires version.")
+    if not rctx.attr.build_tools_version:
+        fail("hermetic_android_sdk_repository requires build_tools_version.")
+
+    _require_license(rctx, ANDROID_SDK_LICENSE_ENV, "SDK")
+    sdk = _resolve_sdk(rctx)
+    _download_component(
+        rctx,
+        url = sdk["platforms_url"],
+        sha256 = sdk["platforms_sha256"],
+        output = "platforms",
+        strip_prefix = sdk["platforms_strip_prefix"],
+    )
+
+    rctx.symlink(Label("@rules_android//rules/android_sdk_repository:helper.bzl"), "helper.bzl")
+    rctx.template(
+        "BUILD.bazel",
+        Label("//sdk:BUILD.androidsdk.tpl"),
+        substitutions = {
+            "%{api_level}": sdk["api_level"],
+            "%{build_tools_directory}": sdk["build_tools_directory"],
+            "%{build_tools_version}": sdk["build_tools_version"],
+            "%{platform_aliases}": _platform_redirect_aliases(rctx, sdk),
+            "%{platform_rules}": _platform_redirect_rules(rctx, sdk),
             "%{optional_java_imports}": _optional_java_imports(sdk["api_level"]),
         },
     )
@@ -663,6 +762,7 @@ hermetic_android_sdk_repository = repository_rule(
         "build_tools_strip_prefixes": attr.string_dict(),
         "build_tools_urls": attr.string_dict(),
         "build_tools_version": attr.string(mandatory = True),
+        "platform_repositories": attr.string_dict(mandatory = True),
         "platform_tools_sha256s": attr.string_dict(),
         "platform_tools_urls": attr.string_dict(),
         "platforms_sha256": attr.string(),

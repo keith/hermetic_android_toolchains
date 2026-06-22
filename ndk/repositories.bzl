@@ -1,6 +1,19 @@
 """Repository rule for downloading a hermetic Android NDK."""
 
 load("//ndk:versions.bzl", "DEFAULT_API_LEVEL", "NDK_VERSIONS")
+load(
+    "//private:utils.bzl",
+    "ANDROID_PLATFORMS",
+    _archive_attrs = "archive_attrs",
+    _check_known_platforms = "check_known_platforms",
+    _check_matching_platforms = "check_matching_platforms",
+    _external_label = "external_label",
+    _format_platforms = "format_platforms",
+    _platform_condition = "platform_condition",
+    _platform_repository = "platform_repository",
+    _require_license = "require_license",
+    _select_alias = "select_alias",
+)
 
 ANDROID_NDK_LICENSE_ENV = "ACCEPTED_ANDROID_NDK_LICENSE_VERSION"
 
@@ -23,80 +36,21 @@ NDK_TAG = tag_class(attrs = {
     ),
 })
 
-_PLATFORMS = {
-    "darwin": {
-        "clang_directory": "toolchains/llvm/prebuilt/darwin-x86_64",
-        "constraints": [
-            ("darwin", ["@platforms//os:macos"]),
-        ],
-        "executable_extension": "",
-    },
-    "linux": {
-        "clang_directory": "toolchains/llvm/prebuilt/linux-x86_64",
-        "constraints": [
-            ("linux", ["@platforms//os:linux", "@platforms//cpu:x86_64"]),
-        ],
-        "executable_extension": "",
-    },
-    "windows": {
-        "clang_directory": "toolchains/llvm/prebuilt/windows-x86_64",
-        "constraints": [
-            ("windows", ["@platforms//os:windows", "@platforms//cpu:x86_64"]),
-        ],
-        "executable_extension": ".exe",
-    },
+_CLANG_DIRECTORIES = {
+    "darwin": "toolchains/llvm/prebuilt/darwin-x86_64",
+    "linux": "toolchains/llvm/prebuilt/linux-x86_64",
+    "windows": "toolchains/llvm/prebuilt/windows-x86_64",
 }
 
-def _require_license(rctx):
-    value = rctx.getenv(ANDROID_NDK_LICENSE_ENV)
-    if value != rctx.attr.version:
-        fail("""\
-Before using the hermetic Android NDK toolchain you must read and accept the license for the current version. Once you have done so, add this in your '.bazelrc':
+def _platforms():
+    platforms = {}
+    for platform, metadata in ANDROID_PLATFORMS.items():
+        platform_metadata = dict(metadata)
+        platform_metadata["clang_directory"] = _CLANG_DIRECTORIES[platform]
+        platforms[platform] = platform_metadata
+    return platforms
 
-common --repo_env={}={}
-
-Current {} value was {}.""".format(
-            ANDROID_NDK_LICENSE_ENV,
-            rctx.attr.version,
-            ANDROID_NDK_LICENSE_ENV,
-            value or "unset",
-        ))
-
-def _archive_url(archive):
-    if archive.get("url"):
-        return archive["url"]
-    return "https://dl.google.com/android/repository/{}".format(archive["file"])
-
-def _archive_attrs(archives):
-    urls = {}
-    sha256s = {}
-    for platform, archive in archives.items():
-        urls[platform] = _archive_url(archive)
-        sha256s[platform] = archive["sha256"]
-    return urls, sha256s
-
-def _format_platforms(platforms):
-    return ", ".join(sorted(platforms))
-
-def _check_known_platforms(values, attr_name):
-    keys = sorted(values.keys())
-    unknown = [platform for platform in keys if platform not in _PLATFORMS]
-    if unknown:
-        fail("{} contains unsupported platforms: [{}]. Expected keys from [{}].".format(
-            attr_name,
-            _format_platforms(unknown),
-            _format_platforms(_PLATFORMS.keys()),
-        ))
-
-def _check_matching_platforms(values, attr_name, platforms):
-    keys = sorted(values.keys())
-    expected = sorted(platforms)
-    if keys != expected:
-        fail("{} must use the same platforms as urls: got [{}], expected [{}].".format(
-            attr_name,
-            _format_platforms(keys),
-            _format_platforms(expected),
-        ))
+_PLATFORMS = _platforms()
 
 def _custom_archives(rctx):
     if not rctx.attr.urls or not rctx.attr.sha256s:
@@ -122,7 +76,7 @@ def _resolve_ndk(rctx):
         ndk = _custom_archives(rctx)
     elif rctx.attr.version in versions:
         known = versions[rctx.attr.version]
-        urls, sha256s = _archive_attrs(known["archives"])
+        urls, sha256s = _archive_attrs(known["archives"], include_strip_prefixes = False)
         ndk = {
             "platforms": sorted(urls.keys()),
             "sha256s": sha256s,
@@ -165,6 +119,76 @@ def _platform_toolchains(platforms):
             toolchains.append((name, clang_directory, constraints))
     return repr(toolchains)
 
+def _ndk_for_platform(ndk, platform):
+    if platform not in ndk["platforms"]:
+        fail("Android NDK archives are not available for platform {}. Available platforms: [{}].".format(
+            repr(platform),
+            _format_platforms(ndk["platforms"]),
+        ))
+    platform_ndk = dict(ndk)
+    platform_ndk["platforms"] = [platform]
+    return platform_ndk
+
+def _platform_redirect_alias(rctx, ndk, name, target):
+    return _select_alias(name, [
+        (_platform_condition(platform), _external_label(_platform_repository(rctx, platform, "NDK"), target))
+        for platform in ndk["platforms"]
+    ])
+
+def _platform_redirect_toolchains(rctx, ndk):
+    toolchains = []
+    for platform in ndk["platforms"]:
+        repository = _platform_repository(rctx, platform, "NDK")
+        clang_directory = _PLATFORMS[platform]["clang_directory"]
+        toolchain_pattern = "@{}//{}:cc_toolchain_{{}}".format(repository, clang_directory)
+        for name, constraints in _PLATFORMS[platform]["constraints"]:
+            toolchains.append((name, toolchain_pattern, constraints))
+    return repr(toolchains)
+
+def _platform_redirect_toolchain_suite_alias(rctx, ndk):
+    return _select_alias("toolchain", [
+        (
+            _platform_condition(platform),
+            "@{}//{}:cc_toolchain_suite".format(
+                _platform_repository(rctx, platform, "NDK"),
+                _PLATFORMS[platform]["clang_directory"],
+            ),
+        )
+        for platform in ndk["platforms"]
+    ])
+
+def _platform_redirect_build_file_content(rctx, ndk):
+    aliases = [
+        _platform_redirect_toolchain_suite_alias(rctx, ndk),
+        _platform_redirect_alias(rctx, ndk, "cpufeatures", "cpufeatures"),
+        _platform_redirect_alias(rctx, ndk, "native_app_glue", "native_app_glue"),
+        _platform_redirect_alias(rctx, ndk, "sources/android/native_app_glue/android_native_app_glue.h", "sources/android/native_app_glue/android_native_app_glue.h"),
+    ]
+    return """\"\"\"Generated Android NDK platform redirect repository.\"\"\"
+
+load("//:platform_toolchains.bzl", "PLATFORM_TOOLCHAINS")
+load("//:target_systems.bzl", "CPU_CONSTRAINT", "TARGET_SYSTEM_NAMES")
+
+package(default_visibility = ["//visibility:public"])
+
+[
+    toolchain(
+        name = "toolchain_{{}}_{{}}".format(platform_name, target_system_name),
+        exec_compatible_with = exec_compatible_with,
+        target_compatible_with = [
+            "@platforms//os:android",
+            CPU_CONSTRAINT[target_system_name],
+        ],
+        toolchain = toolchain_pattern.format(target_system_name),
+        toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
+    )
+    for platform_name, toolchain_pattern, exec_compatible_with in PLATFORM_TOOLCHAINS
+    for target_system_name in TARGET_SYSTEM_NAMES
+]
+
+{aliases}
+""".format(aliases = "\n\n".join(aliases))
+
 def _generate_platform_build_files(rctx, ndk):
     repository_name = rctx.attr._rules_android_ndk_build.workspace_name
     for platform in ndk["platforms"]:
@@ -193,12 +217,12 @@ def _generate_platform_build_files(rctx, ndk):
             },
         )
 
-def _hermetic_android_ndk_repository_impl(rctx):
+def _hermetic_android_ndk_platform_repository_impl(rctx):
     if not rctx.attr.version:
-        fail("hermetic_android_ndk_repository requires version.")
+        fail("hermetic_android_ndk_platform_repository requires version.")
 
-    _require_license(rctx)
-    ndk = _resolve_ndk(rctx)
+    _require_license(rctx, ANDROID_NDK_LICENSE_ENV, "NDK")
+    ndk = _ndk_for_platform(_resolve_ndk(rctx), rctx.attr.platform)
     _download_ndk(rctx, ndk)
 
     rctx.file("ndk/.keep", "")
@@ -219,10 +243,11 @@ def _hermetic_android_ndk_repository_impl(rctx):
         return rctx.repo_metadata(reproducible = True)
     return None
 
-hermetic_android_ndk_repository = repository_rule(
-    implementation = _hermetic_android_ndk_repository_impl,
+hermetic_android_ndk_platform_repository = repository_rule(
+    implementation = _hermetic_android_ndk_platform_repository_impl,
     attrs = {
         "api_level": attr.int(),
+        "platform": attr.string(mandatory = True, values = sorted(_PLATFORMS.keys())),
         "sha256s": attr.string_dict(),
         "strip_prefix": attr.string(),
         "urls": attr.string_dict(),
@@ -239,6 +264,49 @@ hermetic_android_ndk_repository = repository_rule(
             default = Label("@rules_android_ndk//:BUILD.ndk_sysroot.tpl"),
             allow_single_file = True,
         ),
+        "_template_target_systems": attr.label(
+            default = Label("@rules_android_ndk//:target_systems.bzl.tpl"),
+            allow_single_file = True,
+        ),
+        "_versions_json": attr.label(
+            default = NDK_VERSIONS,
+            allow_single_file = True,
+        ),
+    },
+    environ = [ANDROID_NDK_LICENSE_ENV],
+)
+
+def _hermetic_android_ndk_repository_impl(rctx):
+    if not rctx.attr.version:
+        fail("hermetic_android_ndk_repository requires version.")
+
+    _require_license(rctx, ANDROID_NDK_LICENSE_ENV, "NDK")
+    ndk = _resolve_ndk(rctx)
+
+    rctx.file(
+        "platform_toolchains.bzl",
+        "PLATFORM_TOOLCHAINS = {}\n".format(_platform_redirect_toolchains(rctx, ndk)),
+    )
+    rctx.file("BUILD.bazel", _platform_redirect_build_file_content(rctx, ndk))
+    rctx.template(
+        "target_systems.bzl",
+        rctx.attr._template_target_systems,
+        {},
+    )
+
+    if hasattr(rctx, "repo_metadata"):
+        return rctx.repo_metadata(reproducible = True)
+    return None
+
+hermetic_android_ndk_repository = repository_rule(
+    implementation = _hermetic_android_ndk_repository_impl,
+    attrs = {
+        "api_level": attr.int(),
+        "platform_repositories": attr.string_dict(mandatory = True),
+        "sha256s": attr.string_dict(),
+        "strip_prefix": attr.string(),
+        "urls": attr.string_dict(),
+        "version": attr.string(mandatory = True),
         "_template_target_systems": attr.label(
             default = Label("@rules_android_ndk//:target_systems.bzl.tpl"),
             allow_single_file = True,

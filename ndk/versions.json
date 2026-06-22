@@ -102,6 +102,23 @@
         }
       }
     },
+    "29.0.13846066": {
+      "strip_prefix": "android-ndk-r29-beta3",
+      "archives": {
+        "darwin": {
+          "file": "android-ndk-r29-beta3-darwin.zip",
+          "sha256": "8e9db80c3691fef72ca0c01768d87b5aca2afba80de1dd99289ef646e9e0a725"
+        },
+        "linux": {
+          "file": "android-ndk-r29-beta3-linux.zip",
+          "sha256": "ca0eaac8f992635a4a74c2927e2e76d788f18b8ba52c668ddc7f675fe6265d48"
+        },
+        "windows": {
+          "file": "android-ndk-r29-beta3-windows.zip",
+          "sha256": "02a7c77197fad386807f442c9f7c791041a10f050d0c446b46dd0e9e77112ff5"
+        }
+      }
+    },
     "r29": {
       "strip_prefix": "android-ndk-r29",
       "archives": {

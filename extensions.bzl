@@ -1,7 +1,20 @@
 """Module extension for Android SDK and NDK repositories."""
 
-load("//ndk:repositories.bzl", "ANDROID_NDK_LICENSE_ENV", "NDK_TAG", "hermetic_android_ndk_repository")
-load("//sdk:repositories.bzl", "ANDROID_SDK_LICENSE_ENV", "SDK_TAG", "hermetic_android_sdk_repository")
+load(
+    "//ndk:repositories.bzl",
+    "ANDROID_NDK_LICENSE_ENV",
+    "NDK_TAG",
+    "hermetic_android_ndk_platform_repository",
+    "hermetic_android_ndk_repository",
+)
+load("//private:utils.bzl", "ANDROID_PLATFORMS")
+load(
+    "//sdk:repositories.bzl",
+    "ANDROID_SDK_LICENSE_ENV",
+    "SDK_TAG",
+    "hermetic_android_sdk_platform_repository",
+    "hermetic_android_sdk_repository",
+)
 
 def _single_root_tag(module_ctx, tag_name):
     root_tags = []
@@ -56,8 +69,35 @@ def _android_impl(module_ctx):
     sdk = _sdk_kwargs(_single_root_tag(module_ctx, "sdk"))
     ndk = _ndk_kwargs(_single_root_tag(module_ctx, "ndk"))
 
-    hermetic_android_sdk_repository(name = "androidsdk", **sdk)
-    hermetic_android_ndk_repository(name = "androidndk", **ndk)
+    sdk_platform_repositories = {}
+    for platform in sorted(ANDROID_PLATFORMS.keys()):
+        name = "androidsdk_{}".format(platform)
+        hermetic_android_sdk_platform_repository(
+            name = name,
+            platform = platform,
+            **sdk
+        )
+        sdk_platform_repositories[platform] = name
+    hermetic_android_sdk_repository(
+        name = "androidsdk",
+        platform_repositories = sdk_platform_repositories,
+        **sdk
+    )
+
+    ndk_platform_repositories = {}
+    for platform in sorted(ANDROID_PLATFORMS.keys()):
+        name = "androidndk_{}".format(platform)
+        hermetic_android_ndk_platform_repository(
+            name = name,
+            platform = platform,
+            **ndk
+        )
+        ndk_platform_repositories[platform] = name
+    hermetic_android_ndk_repository(
+        name = "androidndk",
+        platform_repositories = ndk_platform_repositories,
+        **ndk
+    )
 
     return module_ctx.extension_metadata(reproducible = True)
 
