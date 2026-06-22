@@ -14,7 +14,6 @@ load(
     _require_license = "require_license",
     _select_alias = "select_alias",
 )
-load("//sdk:versions.bzl", "SDK_VERSIONS")
 
 ANDROID_SDK_LICENSE_ENV = "ACCEPTED_ANDROID_SDK_LICENSE_VERSION"
 
@@ -712,7 +711,7 @@ hermetic_android_sdk_platform_repository = repository_rule(
         "platform": attr.string(mandatory = True, values = sorted(_PLATFORMS.keys())),
         "version": attr.string(mandatory = True),
         "_versions_json": attr.label(
-            default = SDK_VERSIONS,
+            default = Label("//sdk:versions.json"),
             allow_single_file = True,
         ),
     },
@@ -770,7 +769,7 @@ hermetic_android_sdk_repository = repository_rule(
         "platforms_url": attr.string(),
         "version": attr.string(mandatory = True),
         "_versions_json": attr.label(
-            default = SDK_VERSIONS,
+            default = Label("//sdk:versions.json"),
             allow_single_file = True,
         ),
     },
