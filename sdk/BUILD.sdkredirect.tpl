@@ -11,6 +11,12 @@ load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 
 package(default_visibility = ["//visibility:public"])
 
+exports_files([
+    "platforms/android-%{api_level}/android.jar",
+    "platforms/android-%{api_level}/core-for-system-modules.jar",
+    "platforms/android-%{api_level}/framework.aidl",
+])
+
 toolchain_type(name = "sdk_toolchain_type")
 
 config_feature_flag(
