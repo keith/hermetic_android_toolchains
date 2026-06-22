@@ -18,6 +18,28 @@ bazel_dep(name = "rules_python", version = "2.0.3", dev_dependency = True)
 rules_java_toolchains = use_extension("@rules_java//java:extensions.bzl", "toolchains")
 use_repo(rules_java_toolchains, "remote_java_tools")
 
+# https://github.com/bazelbuild/rules_android/issues/485
+bazel_dep(name = "rules_jvm_external", version = "7.0", dev_dependency = True)
+
+maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven", dev_dependency = True)
+maven.install(
+    name = "rules_android_maven",
+    aar_import_bzl_label = "@rules_android//rules:rules.bzl",
+    artifacts = [],
+    known_contributing_modules = ["rules_android"],
+    # REPIN=1 bazel run --enable_bzlmod @rules_android_maven//:pin
+    lock_file = "//:rules_android_maven_install.json",
+    repositories = [
+        "https://maven.google.com",
+        "https://repo1.maven.org/maven2",
+    ],
+    use_starlark_android_rules = True,
+)
+use_repo(
+    maven,
+    "rules_android_maven",
+)
+
 android = use_extension("//:extensions.bzl", "android", dev_dependency = True)
 android.sdk(
     build_tools_version = "35.0.0",
