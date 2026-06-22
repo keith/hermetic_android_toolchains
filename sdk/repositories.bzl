@@ -267,6 +267,8 @@ def _script_runner(name, platform, build_tools_directory):
 def _platform_tool(platform, build_tools_directory, tool):
     if platform == "windows":
         return "\"build-tools/windows/{}/{}.exe\"".format(build_tools_directory, tool)
+    if tool == "dexdump":
+        return "\"build-tools/{}/{}/{}\"".format(platform, build_tools_directory, tool)
     return "\":{}_{}\"".format(tool, platform)
 
 def _platform_rules_for(platform, sdk):
@@ -287,7 +289,7 @@ def _platform_rules_for(platform, sdk):
     ))
 
     if platform != "windows":
-        for tool in ["aapt", "aapt2", "aidl", "dexdump", "zipalign"]:
+        for tool in ["aapt", "aapt2", "aidl", "zipalign"]:
             blocks.append(_script_runner(tool, platform, build_tools_directory))
 
     blocks.append("""java_binary(
@@ -437,6 +439,8 @@ def _platform_rules(sdk):
 def _tool_alias_label(platform, build_tools_directory, tool):
     if platform == "windows":
         return "build-tools/windows/{}/{}.exe".format(build_tools_directory, tool)
+    if tool == "dexdump":
+        return "build-tools/{}/{}/{}".format(platform, build_tools_directory, tool)
     return ":{}_{}".format(tool, platform)
 
 def _adb_alias_label(platform):
@@ -453,6 +457,17 @@ def _platform_select_alias(name, platforms, linux, darwin, windows):
     if "windows" in platforms:
         entries.append((platform_condition("windows"), windows))
     return select_alias(name, entries, tags = ["manual"])
+
+def _plain_alias(name, actual, tags = None):
+    lines = [
+        "alias(",
+        "    name = \"{}\",".format(name),
+        "    actual = \"{}\",".format(actual),
+    ]
+    if tags:
+        lines.append("    tags = [{}],".format(", ".join(["\"{}\"".format(tag) for tag in tags])))
+    lines.append(")")
+    return "\n".join(lines)
 
 def _platform_aliases(sdk):
     platforms = sdk["platforms"]
@@ -507,12 +522,10 @@ def _platform_aliases(sdk):
             ":apksigner_darwin",
             ":apksigner_windows",
         ),
-        _platform_select_alias(
+        _plain_alias(
             "dexdump",
-            platforms,
-            _tool_alias_label("linux", build_tools_directory, "dexdump"),
-            _tool_alias_label("darwin", build_tools_directory, "dexdump"),
-            _tool_alias_label("windows", build_tools_directory, "dexdump"),
+            _tool_alias_label(platforms[0], build_tools_directory, "dexdump"),
+            tags = ["manual"],
         ),
         _platform_select_alias(
             "main_dex_classes",
@@ -664,7 +677,7 @@ def _write_runner_scripts(rctx, sdk):
             continue
         build_tools_directory = sdk["build_tools_directory"]
         executable_extension = ANDROID_PLATFORMS[platform]["executable_extension"]
-        for tool in ["aapt", "aapt2", "aidl", "dexdump", "zipalign"]:
+        for tool in ["aapt", "aapt2", "aidl", "zipalign"]:
             rctx.file(
                 "tools/{}_{}.sh".format(tool, platform),
                 _runner_script_content(rctx, tool, platform, build_tools_directory, executable_extension),
