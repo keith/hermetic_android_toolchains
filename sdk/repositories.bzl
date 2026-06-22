@@ -319,7 +319,10 @@ def _platform_rules_for(platform, sdk):
     main_dex_list_creator = ":main_dex_list_creator",
     proguard = "@remote_java_tools//:proguard",
     source_properties = "platforms/android-{api_level}/source.properties",
-    tags = ["__ANDROID_RULES_MIGRATION__"],
+    tags = [
+        "__ANDROID_RULES_MIGRATION__",
+        "manual",
+    ],
     zipalign = {zipalign},
 )
 
@@ -336,6 +339,7 @@ android_toolchain(
     object_method_rewriter = ":fail",
     profgen = ":fail",
     proto_map_generator = ":fail",
+    tags = ["manual"],
     translation_merger = ":fail",
 )
 """.format(
@@ -589,7 +593,10 @@ def _platform_redirect_rules_for(rctx, platform, sdk):
     main_dex_list_creator = ":main_dex_list_creator",
     proguard = "@remote_java_tools//:proguard",
     source_properties = "platforms/android-{api_level}/source.properties",
-    tags = ["__ANDROID_RULES_MIGRATION__"],
+    tags = [
+        "__ANDROID_RULES_MIGRATION__",
+        "manual",
+    ],
     zipalign = "@{repository}//:zipalign",
 )
 
@@ -606,6 +613,7 @@ android_toolchain(
     object_method_rewriter = ":fail",
     profgen = ":fail",
     proto_map_generator = ":fail",
+    tags = ["manual"],
     translation_merger = ":fail",
 )
 """.format(
