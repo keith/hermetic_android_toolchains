@@ -244,7 +244,6 @@ def _generate():
     versions = {}
     for version, pkg in platforms.items():
         versions[version] = {
-            "api_level": version,
             "platform_tools_version": platform_tools_version,
             "platform": _archive_json(_single_archive(pkg), metadata, infer_prefix=False),
         }

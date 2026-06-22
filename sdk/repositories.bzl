@@ -98,9 +98,9 @@ def _common_platforms(*platform_groups):
         ))
     return platforms
 
-def _resolve_known_sdk(rctx, data, known):
+def _resolve_known_sdk(rctx, data, version, known):
     components = data["components"]
-    api_level = rctx.attr.api_level or known["api_level"]
+    api_level = rctx.attr.api_level or version
     build_tools_version = rctx.attr.build_tools_version
 
     if build_tools_version not in components["build_tools"]:
@@ -185,7 +185,7 @@ def _resolve_sdk(rctx):
     if rctx.attr.version in versions:
         if _custom_archive_attrs(rctx):
             return _resolve_custom_sdk(rctx)
-        return _resolve_known_sdk(rctx, versions_json, versions[rctx.attr.version])
+        return _resolve_known_sdk(rctx, versions_json, rctx.attr.version, versions[rctx.attr.version])
     return _resolve_custom_sdk(rctx)
 
 def _download_component(rctx, url, sha256, output, strip_prefix = ""):
