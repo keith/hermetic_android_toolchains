@@ -23,6 +23,8 @@ common --incompatible_enable_proto_toolchain_resolution
 # --remote_header=x-buildbuddy-api-key=<BUILDBUDDY_API_KEY secret>.
 build:buildbuddy --bes_results_url=https://app.buildbuddy.io/invocation/
 build:buildbuddy --bes_backend=grpcs://remote.buildbuddy.io
+build:buildbuddy --experimental_remote_downloader=grpcs://buildbuddy.buildbuddy.io
+build:buildbuddy --experimental_remote_downloader_local_fallback
 build:buildbuddy --remote_cache=grpcs://remote.buildbuddy.io
 build:buildbuddy --remote_cache_compression
 build:buildbuddy --remote_timeout=3600
