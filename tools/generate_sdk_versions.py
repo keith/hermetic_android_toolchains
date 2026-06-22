@@ -40,7 +40,9 @@ def _stable_channel(root):
 
 def _revision(pkg):
     rev = pkg.find("revision")
-    return tuple(int(rev.findtext(part) or 0) for part in ("major", "minor", "micro", "preview"))
+    return tuple(
+        int(rev.findtext(part) or 0) for part in ("major", "minor", "micro", "preview")
+    )
 
 
 def _revision_name(rev):
@@ -71,23 +73,35 @@ def _parse_packages(root):
             checksum = complete.find("checksum") if complete is not None else None
             url = complete.findtext("url") if complete is not None else None
             if not url or checksum is None or not checksum.text:
-                raise ValueError("archive for {} is missing url or checksum".format(pkg.attrib["path"]))
+                raise ValueError(
+                    "archive for {} is missing url or checksum".format(
+                        pkg.attrib["path"]
+                    )
+                )
             if checksum.attrib.get("type", "sha1") != "sha1":
-                raise ValueError("unsupported checksum type for {}".format(pkg.attrib["path"]))
+                raise ValueError(
+                    "unsupported checksum type for {}".format(pkg.attrib["path"])
+                )
 
             manifest_platform = archive.findtext("host-os")
-            archives.append({
-                "file": url,
-                "platform": _MANIFEST_PLATFORMS.get(manifest_platform) if manifest_platform else None,
-                "sha1": checksum.text,
-                "url": _BASE_URL + url,
-            })
+            archives.append(
+                {
+                    "file": url,
+                    "platform": _MANIFEST_PLATFORMS.get(manifest_platform)
+                    if manifest_platform
+                    else None,
+                    "sha1": checksum.text,
+                    "url": _BASE_URL + url,
+                }
+            )
 
-        packages.append({
-            "archives": archives,
-            "path": pkg.attrib["path"],
-            "revision": _revision(pkg),
-        })
+        packages.append(
+            {
+                "archives": archives,
+                "path": pkg.attrib["path"],
+                "revision": _revision(pkg),
+            }
+        )
     return packages
 
 
@@ -102,16 +116,23 @@ def _latest_by_path(packages):
 
 def _single_archive(pkg):
     if len(pkg["archives"]) != 1 or pkg["archives"][0]["platform"] is not None:
-        raise ValueError("expected one platform-independent archive for {}".format(pkg["path"]))
+        raise ValueError(
+            "expected one platform-independent archive for {}".format(pkg["path"])
+        )
     return pkg["archives"][0]
 
 
 def _platform_archive(pkg, platform):
-    candidates = [archive for archive in pkg["archives"] if archive["platform"] == platform]
+    candidates = [
+        archive for archive in pkg["archives"] if archive["platform"] == platform
+    ]
     if not candidates:
         raise ValueError("missing {} archive for {}".format(platform, pkg["path"]))
     if platform == "darwin":
-        return sorted(candidates, key=lambda archive: ("x64" not in archive["file"], archive["file"]))[0]
+        return sorted(
+            candidates,
+            key=lambda archive: ("x64" not in archive["file"], archive["file"]),
+        )[0]
     return sorted(candidates, key=lambda archive: archive["file"])[0]
 
 
@@ -192,7 +213,9 @@ def _archive_json(archive, metadata, infer_prefix):
 
 def _platform_archives_json(pkg, metadata):
     return {
-        platform: _archive_json(_platform_archive(pkg, platform), metadata, infer_prefix=True)
+        platform: _archive_json(
+            _platform_archive(pkg, platform), metadata, infer_prefix=True
+        )
         for platform in _ARCHIVE_PLATFORMS
     }
 
@@ -245,7 +268,9 @@ def _generate():
     for version, pkg in platforms.items():
         versions[version] = {
             "platform_tools_version": platform_tools_version,
-            "platform": _archive_json(_single_archive(pkg), metadata, infer_prefix=False),
+            "platform": _archive_json(
+                _single_archive(pkg), metadata, infer_prefix=False
+            ),
         }
 
     return {"components": components, "versions": versions}
