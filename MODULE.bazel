@@ -56,6 +56,15 @@ rules_android_sdk = use_extension(
 
 override_repo(rules_android_sdk, "androidsdk")
 
+# Make @rules_android_ndk's @androidndk labels resolve to the hermetic SDK.
+rules_android_ndk = use_extension(
+    "@rules_android_ndk//:extension.bzl",
+    "android_ndk_repository_extension",
+    dev_dependency = True,
+)
+
+override_repo(rules_android_ndk, "androidndk")
+
 register_toolchains(
     "@androidndk//:all",
     "@androidsdk//:all",
