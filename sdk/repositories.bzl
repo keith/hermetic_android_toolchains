@@ -221,6 +221,14 @@ def _runner_script_content(rctx, name, platform, build_tools_directory, executab
     tool = "{}{}".format(name, executable_extension)
     tool_path = "build-tools/{}/{}/{}".format(platform, build_tools_directory, tool)
     libs = "build-tools/{}/{}".format(platform, build_tools_directory)
+    if platform == "darwin":
+        exec_lines = """exec "${tool}" "$@"
+"""
+    else:
+        exec_lines = """exec env \\
+  LD_LIBRARY_PATH="${{repo}}/{libs}/lib64:${{repo}}/{libs}/lib:${{LD_LIBRARY_PATH:-}}" \\
+  "${{tool}}" "$@"
+""".format(libs = libs)
 
     # buildifier: disable=external-path
     return """#!/usr/bin/env bash
@@ -230,12 +238,9 @@ if [[ ! -d "${{repo}}" ]]; then
   repo="$(pwd)/external/{repo_name}"
 fi
 tool="${{repo}}/{tool_path}"
-exec env \\
-  LD_LIBRARY_PATH="${{repo}}/{libs}/lib64:${{repo}}/{libs}/lib:${{LD_LIBRARY_PATH:-}}" \\
-  DYLD_LIBRARY_PATH="${{repo}}/{libs}/lib64:${{repo}}/{libs}/lib:${{DYLD_LIBRARY_PATH:-}}" \\
-  "${{tool}}" "$@"
+{exec_lines}
 """.format(
-        libs = libs,
+        exec_lines = exec_lines,
         repo_name = rctx.name,
         tool_path = tool_path,
     )
