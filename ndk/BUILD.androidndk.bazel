@@ -9,6 +9,11 @@ package(default_visibility = ["//visibility:public"])
 exports_files([
     "target_systems.bzl",
     "sources/android/native_app_glue/android_native_app_glue.h",
+    # The NDK's version manifest sits at the repo root. A non-cc-toolchain
+    # consumer (e.g. a Swift cross-compile toolchain that needs the sysroot
+    # *path*, not just a registered cc toolchain) can resolve this file and take
+    # its dirname to locate the NDK root and the per-host sysroot directory.
+    "source.properties",
 ])
 
 cc_library(

@@ -213,7 +213,10 @@ hermetic_android_ndk_platform_repository = repository_rule(
             allow_single_file = True,
         ),
         "_template_ndk_sysroot": attr.label(
-            default = Label("@rules_android_ndk//:BUILD.ndk_sysroot.tpl"),
+            # Our own copy of rules_android_ndk's template, extended with a
+            # `libcxx_shared_*` target so non-cc-toolchain consumers (e.g. a
+            # Swift cross-compile toolchain) can package the shared C++ runtime.
+            default = Label("//ndk:BUILD.ndk_sysroot.tpl"),
             allow_single_file = True,
         ),
         "_template_target_systems": attr.label(
