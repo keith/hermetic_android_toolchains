@@ -67,6 +67,7 @@ def _ndk_kwargs(tag):
 
 def _android_impl(module_ctx):
     sdk = _sdk_kwargs(_single_root_tag(module_ctx, "sdk"))
+    root_module_direct_dev_deps = ["androidsdk"]
 
     sdk_platform_repositories = {}
     for platform in sorted(ANDROID_PLATFORMS.keys()):
@@ -99,8 +100,13 @@ def _android_impl(module_ctx):
             platform_repositories = ndk_platform_repositories,
             **ndk
         )
+        root_module_direct_dev_deps.append("androidndk")
 
-    return module_ctx.extension_metadata(reproducible = True)
+    return module_ctx.extension_metadata(
+        reproducible = True,
+        root_module_direct_deps = [],
+        root_module_direct_dev_deps = root_module_direct_dev_deps,
+    )
 
 android = module_extension(
     implementation = _android_impl,
