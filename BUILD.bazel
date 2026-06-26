@@ -53,4 +53,5 @@ default_java_toolchain(
     ],
     source_version = "17",
     target_version = "17",
+    visibility = ["//visibility:private"],
 )
