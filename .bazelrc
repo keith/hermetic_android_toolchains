@@ -34,3 +34,13 @@ build:buildbuddy --remote_timeout=3600
 build:buildbuddy-ci --config=buildbuddy
 build:buildbuddy-ci --build_metadata=ROLE=CI
 build:buildbuddy-ci --build_metadata=VISIBILITY=PUBLIC
+
+build:buildbuddy-remote-exec --config=buildbuddy
+build:buildbuddy-remote-exec --extra_execution_platforms=//:linux_x86_64
+build:buildbuddy-remote-exec --extra_toolchains=//:remote_exec_java_toolchain_jdk_17_definition
+build:buildbuddy-remote-exec --extra_toolchains=@llvm//...
+build:buildbuddy-remote-exec --remote_default_exec_properties=container-image="docker://buildpack-deps:jammy"
+build:buildbuddy-remote-exec --remote_executor=grpcs://remote.buildbuddy.io
+
+build:buildbuddy-remote-exec-ci --config=buildbuddy-ci
+build:buildbuddy-remote-exec-ci --config=buildbuddy-remote-exec

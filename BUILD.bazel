@@ -1,3 +1,9 @@
+load(
+    "@rules_java//toolchains:default_java_toolchain.bzl",
+    "DEFAULT_TOOLCHAIN_CONFIGURATION",
+    "default_java_toolchain",
+)
+
 package(default_visibility = ["//visibility:public"])
 
 config_setting(
@@ -21,4 +27,31 @@ config_setting(
         "@platforms//os:windows",
         "@platforms//cpu:x86_64",
     ],
+)
+
+platform(
+    name = "linux_x86_64",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+    visibility = ["//visibility:private"],
+)
+
+# TODO: Remove after https://github.com/bazelbuild/rules_java/issues/348 is fixed
+default_java_toolchain(
+    name = "remote_exec_java_toolchain_jdk_17",
+    configuration = DEFAULT_TOOLCHAIN_CONFIGURATION | {
+        "java_runtime": "@rules_java//toolchains:remotejdk_25",
+        "jvm_opts": DEFAULT_TOOLCHAIN_CONFIGURATION["jvm_opts"] + [
+            "--sun-misc-unsafe-memory-access=allow",
+        ],
+    },
+    exec_compatible_with = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+    source_version = "17",
+    target_version = "17",
+    visibility = ["//visibility:private"],
 )

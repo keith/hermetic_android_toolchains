@@ -162,6 +162,26 @@ jobs:
         shell: bash
         run: bazel test --config=buildbuddy-ci ${BUILDBUDDY_API_KEY:+--remote_header=x-buildbuddy-api-key=$BUILDBUDDY_API_KEY} //...
 
+  bazel_cross_compilation:
+    name: Cross compilation
+    runs-on: macos-latest
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    env:
+      USE_BAZEL_VERSION: latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: bazel-contrib/setup-bazel@0.19.0
+        with:
+          bazelisk-cache: true
+          disk-cache: true
+          repository-cache: true
+
+      - name: Test
+        shell: bash
+        run: bazel build --config=buildbuddy-remote-exec-ci --remote_header=x-buildbuddy-api-key=${BUILDBUDDY_API_KEY?} //examples/basic_app/java/com/example/hermetic:app
+
   bazel_rolling:
     name: Bazel rolling (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -198,6 +218,7 @@ jobs:
       - bazel_9
       - sdk_only_example
       - bazel_latest
+      - bazel_cross_compilation
       - bazel_rolling
     if: ${{ always() }}
 
@@ -211,6 +232,7 @@ jobs:
           BAZEL_9_RESULT: ${{ needs.bazel_9.result }}
           SDK_ONLY_EXAMPLE_RESULT: ${{ needs.sdk_only_example.result }}
           BAZEL_LATEST_RESULT: ${{ needs.bazel_latest.result }}
+          BAZEL_LATEST_REMOTE_EXEC_RESULT: ${{ needs.bazel_cross_compilation.result }}
           BAZEL_ROLLING_RESULT: ${{ needs.bazel_rolling.result }}
         run: |
           echo "pre-commit: ${PRE_COMMIT_RESULT}"
@@ -219,6 +241,7 @@ jobs:
           echo "Bazel 9.x: ${BAZEL_9_RESULT}"
           echo "SDK-only example: ${SDK_ONLY_EXAMPLE_RESULT}"
           echo "Bazel latest: ${BAZEL_LATEST_RESULT}"
+          echo "Bazel latest remote execution: ${BAZEL_LATEST_REMOTE_EXEC_RESULT}"
           echo "Bazel rolling: ${BAZEL_ROLLING_RESULT}"
 
           if [[ "${PRE_COMMIT_RESULT}" != "success" || \
@@ -227,6 +250,7 @@ jobs:
                 "${BAZEL_9_RESULT}" != "success" || \
                 "${SDK_ONLY_EXAMPLE_RESULT}" != "success" || \
                 "${BAZEL_LATEST_RESULT}" != "success" || \
+                ( "${BAZEL_LATEST_REMOTE_EXEC_RESULT}" != "success" && "${BAZEL_LATEST_REMOTE_EXEC_RESULT}" != "skipped" ) || \
                 "${BAZEL_ROLLING_RESULT}" != "success" ]]; then
             exit 1
           fi
