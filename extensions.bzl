@@ -53,7 +53,7 @@ def _sdk_kwargs(tag):
 
 def _ndk_kwargs(tag):
     if not tag:
-        fail("Expected a root android.ndk(...) tag with version.")
+        return None
     if not tag.version:
         fail("android.ndk(...) requires version.")
 
@@ -67,7 +67,6 @@ def _ndk_kwargs(tag):
 
 def _android_impl(module_ctx):
     sdk = _sdk_kwargs(_single_root_tag(module_ctx, "sdk"))
-    ndk = _ndk_kwargs(_single_root_tag(module_ctx, "ndk"))
 
     sdk_platform_repositories = {}
     for platform in sorted(ANDROID_PLATFORMS.keys()):
@@ -84,20 +83,22 @@ def _android_impl(module_ctx):
         **sdk
     )
 
-    ndk_platform_repositories = {}
-    for platform in sorted(ANDROID_PLATFORMS.keys()):
-        name = "androidndk_{}".format(platform)
-        hermetic_android_ndk_platform_repository(
-            name = name,
-            platform = platform,
+    ndk = _ndk_kwargs(_single_root_tag(module_ctx, "ndk"))
+    if ndk:
+        ndk_platform_repositories = {}
+        for platform in sorted(ANDROID_PLATFORMS.keys()):
+            name = "androidndk_{}".format(platform)
+            hermetic_android_ndk_platform_repository(
+                name = name,
+                platform = platform,
+                **ndk
+            )
+            ndk_platform_repositories[platform] = name
+        hermetic_android_ndk_repository(
+            name = "androidndk",
+            platform_repositories = ndk_platform_repositories,
             **ndk
         )
-        ndk_platform_repositories[platform] = name
-    hermetic_android_ndk_repository(
-        name = "androidndk",
-        platform_repositories = ndk_platform_repositories,
-        **ndk
-    )
 
     return module_ctx.extension_metadata(reproducible = True)
 
