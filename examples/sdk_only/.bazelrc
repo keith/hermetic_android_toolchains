@@ -1,0 +1,3 @@
+import ../../.bazelrc
+
+common --android_platforms=
