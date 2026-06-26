@@ -115,6 +115,25 @@ jobs:
             exit 1
           fi
 
+  sdk_only_example:
+    name: SDK-only example
+    runs-on: ubuntu-latest
+    env:
+      USE_BAZEL_VERSION: "9.1.1"
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: bazel-contrib/setup-bazel@0.19.0
+        with:
+          bazelisk-cache: true
+          disk-cache: true
+          repository-cache: true
+
+      - name: Build
+        shell: bash
+        working-directory: examples/sdk_only
+        run: bazel build --config=buildbuddy-ci ${BUILDBUDDY_API_KEY:+--remote_header=x-buildbuddy-api-key=$BUILDBUDDY_API_KEY} //:app
+
   bazel_latest:
     name: Bazel latest (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -175,6 +194,7 @@ jobs:
       - bazel_lowest_supported
       - bazel_8
       - bazel_9
+      - sdk_only_example
       - bazel_latest
       - bazel_rolling
     if: ${{ always() }}
@@ -187,6 +207,7 @@ jobs:
           BAZEL_LOWEST_SUPPORTED_RESULT: ${{ needs.bazel_lowest_supported.result }}
           BAZEL_8_RESULT: ${{ needs.bazel_8.result }}
           BAZEL_9_RESULT: ${{ needs.bazel_9.result }}
+          SDK_ONLY_EXAMPLE_RESULT: ${{ needs.sdk_only_example.result }}
           BAZEL_LATEST_RESULT: ${{ needs.bazel_latest.result }}
           BAZEL_ROLLING_RESULT: ${{ needs.bazel_rolling.result }}
         run: |
@@ -194,6 +215,7 @@ jobs:
           echo "Bazel 8.4.2: ${BAZEL_LOWEST_SUPPORTED_RESULT}"
           echo "Bazel 8.x: ${BAZEL_8_RESULT}"
           echo "Bazel 9.x: ${BAZEL_9_RESULT}"
+          echo "SDK-only example: ${SDK_ONLY_EXAMPLE_RESULT}"
           echo "Bazel latest: ${BAZEL_LATEST_RESULT}"
           echo "Bazel rolling: ${BAZEL_ROLLING_RESULT}"
 
@@ -201,6 +223,7 @@ jobs:
                 "${BAZEL_LOWEST_SUPPORTED_RESULT}" != "success" || \
                 "${BAZEL_8_RESULT}" != "success" || \
                 "${BAZEL_9_RESULT}" != "success" || \
+                "${SDK_ONLY_EXAMPLE_RESULT}" != "success" || \
                 "${BAZEL_LATEST_RESULT}" != "success" || \
                 "${BAZEL_ROLLING_RESULT}" != "success" ]]; then
             exit 1
