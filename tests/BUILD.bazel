@@ -1,6 +1,10 @@
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_python//python:defs.bzl", "py_test")
-load("//tests:action_command_line_test.bzl", "action_command_line_test")
+load(
+    "//tests:action_command_line_test.bzl",
+    "action_command_line_test",
+    "shared_libcpp_action_command_line_test",
+)
 
 py_test(
     name = "sdk_versions_sha256_test",
@@ -42,6 +46,30 @@ action_command_line_test(
         "/opt/android-sdk",
         "rules_android++android_sdk_repository_extension+androidsdk",
     ],
+    target_under_test = "//examples/basic_app/java/com/example/hermetic:app",
+)
+
+action_command_line_test(
+    name = "android_packaging_omits_shared_libcpp_test",
+    argv_filter = "nativedeps/app/libapp.so:lib/",
+    expected_argv = [
+        "libapp.so:lib/",
+    ],
+    mnemonic = "ApkBuilder",
+    not_expected_argv = [
+        "libc++_shared.so:lib/",
+    ],
+    target_under_test = "//examples/basic_app/java/com/example/hermetic:app",
+)
+
+shared_libcpp_action_command_line_test(
+    name = "android_packaging_includes_shared_libcpp_test",
+    argv_filter = "nativedeps/app/libapp.so:lib/",
+    expected_argv = [
+        "libapp.so:lib/",
+        "libc++_shared.so:lib/",
+    ],
+    mnemonic = "ApkBuilder",
     target_under_test = "//examples/basic_app/java/com/example/hermetic:app",
 )
 
