@@ -1,5 +1,4 @@
 exports_files([
-    "BUILD.androidndk.bazel",
     "BUILD.ndkredirect.bazel",
     "versions.json",
 ])
