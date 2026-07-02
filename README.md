@@ -66,6 +66,20 @@ android.system_image(
 # Repeat for each system image you want to download
 ```
 
+Afterwards the downloads are exposed through various `@androidsdk`
+labels mirroring what `rules_android` does such as:
+
+```
+@androidsdk//:platform-tools/adb
+@androidsdk//:emulator
+@androidsdk//:emulator_shared_libs
+@androidsdk//:emulator_x86_bios
+@androidsdk//:mksd
+@androidsdk//:qemu2
+@androidsdk//:emulator_images_android_28_arm64-v8a  # Version / arch dependent
+@androidsdk//:emulator_images_android_28_arm64-v8a_qemu2_extra  # Version / arch dependent
+```
+
 ## Specifying versions
 
 This repo includes metadata for many Android SDK and NDK versions so you
