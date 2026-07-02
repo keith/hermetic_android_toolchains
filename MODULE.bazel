@@ -54,6 +54,10 @@ android.system_image(
     version = "28",
 )
 android.system_image(
+    arch = "x86_64",
+    version = "28",
+)
+android.system_image(
     arch = "armeabi-v7a",
     version = "24",
 )

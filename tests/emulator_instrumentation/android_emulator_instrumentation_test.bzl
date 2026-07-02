@@ -22,9 +22,9 @@ def _android_emulator_instrumentation_test_impl(ctx):
     emulator = ctx.executable._emulator
     mksd = ctx.executable._mksd
     system_image_source_properties = _single_file_with_basename(
-        ctx.files._system_image,
+        ctx.files.system_image,
         "source.properties",
-        str(ctx.attr._system_image.label),
+        str(ctx.attr.system_image.label),
     )
 
     runfiles = [
@@ -38,8 +38,8 @@ def _android_emulator_instrumentation_test_impl(ctx):
     runfiles.extend(ctx.files._emulator_shared_libs)
     runfiles.extend(ctx.files._emulator_x86_bios)
     runfiles.extend(ctx.files._qemu2)
-    runfiles.extend(ctx.files._system_image)
-    runfiles.extend(ctx.files._system_image_qemu2_extra)
+    runfiles.extend(ctx.files.system_image)
+    runfiles.extend(ctx.files.system_image_qemu2_extra)
     if test_host_apk:
         runfiles.append(test_host_apk.signed_apk)
 
@@ -84,6 +84,16 @@ android_emulator_instrumentation_test = rule(
             providers = [ApkInfo],
             doc = "The Android instrumentation application to run.",
         ),
+        "system_image": attr.label(
+            allow_files = True,
+            mandatory = True,
+            doc = "The Android system image filegroup to boot.",
+        ),
+        "system_image_qemu2_extra": attr.label(
+            allow_files = True,
+            mandatory = True,
+            doc = "Additional QEMU files needed by the Android system image.",
+        ),
         "_aapt2": attr.label(
             allow_files = True,
             cfg = "exec",
@@ -125,14 +135,6 @@ android_emulator_instrumentation_test = rule(
             allow_files = True,
             cfg = "exec",
             default = "@androidsdk//:qemu2",
-        ),
-        "_system_image": attr.label(
-            allow_files = True,
-            default = "@androidsdk//:emulator_images_android_28_arm64-v8a",
-        ),
-        "_system_image_qemu2_extra": attr.label(
-            allow_files = True,
-            default = "@androidsdk//:emulator_images_android_28_arm64-v8a_qemu2_extra",
         ),
     },
     test = True,
