@@ -26,4 +26,4 @@ gh pr create \
   --repo "$GITHUB_REPOSITORY" \
   --base "$base_branch" \
   --head "$branch" \
-  --title "Update versions"
+  --fill
