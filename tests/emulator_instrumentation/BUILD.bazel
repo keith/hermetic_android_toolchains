@@ -6,6 +6,7 @@ android_binary(
     testonly = True,
     srcs = ["HostActivity.java"],
     manifest = "HostAndroidManifest.xml",
+    tags = ["manual"],
 )
 
 android_binary(
@@ -14,6 +15,7 @@ android_binary(
     srcs = ["SmokeInstrumentation.java"],
     instruments = ":host_app",
     manifest = "TestAndroidManifest.xml",
+    tags = ["manual"],
 )
 
 android_emulator_instrumentation_test(
