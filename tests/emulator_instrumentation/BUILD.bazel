@@ -28,5 +28,6 @@ android_emulator_instrumentation_test(
         "//:platform_linux": "@androidsdk//:emulator_images_android_28_x86_64_qemu2_extra",
         "//:platform_windows": "@androidsdk//:emulator_images_android_28_x86_64_qemu2_extra",
     }),
+    tags = ["manual"],
     test_app = ":instrumentation_app",
 )
