@@ -1,0 +1,13 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.hermetic.emulator.test">
+
+    <uses-sdk
+        android:minSdkVersion="23"
+        android:targetSdkVersion="35" />
+
+    <instrumentation
+        android:name=".SmokeInstrumentation"
+        android:targetPackage="com.example.hermetic.emulator.host" />
+
+    <application />
+</manifest>

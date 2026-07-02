@@ -17,6 +17,13 @@ load(
 
 ANDROID_SDK_LICENSE_ENV = "ACCEPTED_ANDROID_SDK_LICENSE_VERSION"
 
+_SYSTEM_IMAGE_ARCHES = [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86",
+    "x86_64",
+]
+
 SDK_TAG = tag_class(attrs = {
     "version": attr.string(
         doc = "Known SDK bundle version or custom SDK version identifier.",
@@ -55,6 +62,25 @@ SDK_TAG = tag_class(attrs = {
     ),
     "platforms_strip_prefix": attr.string(
         doc = "Custom Android platform archive strip prefix.",
+    ),
+})
+
+EMULATOR_TAG = tag_class(attrs = {
+    "version": attr.string(
+        doc = "Known Android Emulator version to download and inject into @androidsdk.",
+        mandatory = True,
+    ),
+})
+
+SYSTEM_IMAGE_TAG = tag_class(attrs = {
+    "version": attr.string(
+        doc = "Known Android default system image version to download and inject into @androidsdk, for example 28.",
+        mandatory = True,
+    ),
+    "arch": attr.string(
+        doc = "Known Android default system image architecture to download and inject into @androidsdk, for example arm64-v8a.",
+        mandatory = True,
+        values = _SYSTEM_IMAGE_ARCHES,
     ),
 })
 
@@ -176,6 +202,58 @@ def _resolve_custom_sdk(rctx):
         "platforms_url": rctx.attr.platforms_url,
     }
 
+def _resolve_system_images(rctx, data):
+    if not rctx.attr.system_images:
+        return []
+
+    system_image_components = data["components"].get("system_images", {})
+    system_images = []
+    for directory in rctx.attr.system_images:
+        if directory not in system_image_components:
+            fail("Unknown Android system image {}. Available system images: [{}].".format(
+                repr(directory),
+                ", ".join(sorted(system_image_components.keys())),
+            ))
+        archive = system_image_components[directory]
+        system_images.append({
+            "directory": directory,
+            "sha256": archive["sha256"],
+            "strip_prefix": archive.get("strip_prefix", ""),
+            "url": archive_url(archive),
+        })
+    return system_images
+
+def _resolve_emulator(rctx, sdk_platforms, *, require_common_platforms):
+    if not rctx.attr.emulator_version:
+        return None
+
+    versions_json = json.decode(rctx.read(rctx.attr._versions_json))
+    components = versions_json["components"]
+    if rctx.attr.emulator_version not in components.get("emulator", {}):
+        fail("Unknown Android Emulator version {}. Add it to sdk/versions.json to use it.".format(
+            repr(rctx.attr.emulator_version),
+        ))
+    emulator = components["emulator"][rctx.attr.emulator_version]
+    emulator_urls, emulator_sha256s, emulator_strip_prefixes = archive_attrs(emulator["archives"], include_strip_prefixes = True)
+    emulator_platforms = sorted(emulator_urls.keys())
+
+    platforms = [platform for platform in sdk_platforms if platform in emulator_platforms]
+    if not platforms:
+        if require_common_platforms:
+            fail("Android Emulator archives have no platforms in common with resolved Android SDK platforms: [{}] vs [{}].".format(
+                format_platforms(emulator_platforms),
+                format_platforms(sdk_platforms),
+            ))
+        return None
+
+    return {
+        "emulator_sha256s": emulator_sha256s,
+        "emulator_strip_prefixes": emulator_strip_prefixes,
+        "emulator_urls": emulator_urls,
+        "emulator_version": rctx.attr.emulator_version,
+        "platforms": platforms,
+    }
+
 def _resolve_sdk(rctx):
     versions_json = json.decode(rctx.read(rctx.attr._versions_json))
     versions = versions_json["versions"]
@@ -215,6 +293,35 @@ def _download_sdk_platform_tools(rctx, sdk):
             sha256 = sdk["platform_tools_sha256s"][platform],
             output = "platform-tools/{}".format(platform),
             strip_prefix = sdk["platform_tools_strip_prefixes"].get(platform, ""),
+        )
+
+def _download_emulator(rctx, emulator):
+    if not emulator:
+        return
+    if len(emulator["platforms"]) != 1:
+        fail("Expected exactly one emulator platform in a platform repository, got [{}].".format(format_platforms(emulator["platforms"])))
+
+    platform = emulator["platforms"][0]
+    if platform not in emulator["emulator_urls"] or platform not in emulator["emulator_sha256s"]:
+        fail("Missing emulator archive for resolved platform {}.".format(platform))
+    _download_component(
+        rctx,
+        url = emulator["emulator_urls"][platform],
+        sha256 = emulator["emulator_sha256s"][platform],
+        output = "emulator",
+        strip_prefix = emulator["emulator_strip_prefixes"].get(platform, ""),
+    )
+
+def _download_system_images(rctx, system_images):
+    if not system_images:
+        return
+    for system_image in system_images:
+        _download_component(
+            rctx,
+            url = system_image["url"],
+            sha256 = system_image["sha256"],
+            output = "system-images/{}".format(system_image["directory"]),
+            strip_prefix = system_image["strip_prefix"],
         )
 
 def _runner_script_content(rctx, name, platform, build_tools_directory, executable_extension):
@@ -399,6 +506,17 @@ def _adb_alias_label(platform):
         return "platform-tools/windows/adb.exe"
     return "platform-tools/{}/adb".format(platform)
 
+def _emulator_tool_label(platform, tool):
+    return "emulator/{}{}".format(tool, ANDROID_PLATFORMS[platform]["executable_extension"])
+
+def _emulator_qemu_i386_label(platform):
+    extension = ANDROID_PLATFORMS[platform]["executable_extension"]
+    qemu_platform = {
+        "linux": "linux-x86_64",
+        "windows": "windows-x86_64",
+    }[platform]
+    return "emulator/qemu/{}/qemu-system-i386{}".format(qemu_platform, extension)
+
 def _plain_alias(name, actual, tags = None):
     lines = [
         "alias(",
@@ -409,6 +527,86 @@ def _plain_alias(name, actual, tags = None):
         lines.append("    tags = [{}],".format(", ".join(["\"{}\"".format(tag) for tag in tags])))
     lines.append(")")
     return "\n".join(lines)
+
+def _plain_filegroup(name, srcs_expr, tags = None):
+    lines = [
+        "filegroup(",
+        "    name = \"{}\",".format(name),
+        "    srcs = {},".format(srcs_expr),
+    ]
+    if tags:
+        lines.append("    tags = [{}],".format(", ".join(["\"{}\"".format(tag) for tag in tags])))
+    lines.append(")")
+    return "\n".join(lines)
+
+def _glob_filegroup(name, patterns, tags = None):
+    lines = [
+        "filegroup(",
+        "    name = \"{}\",".format(name),
+        "    srcs = glob({}, allow_empty = True),".format(repr(patterns)),
+    ]
+    if tags:
+        lines.append("    tags = [{}],".format(", ".join(["\"{}\"".format(tag) for tag in tags])))
+    lines.append(")")
+    return "\n".join(lines)
+
+def _qemu2_x86_srcs_expr(platform):
+    emulator = _emulator_tool_label(platform, "emulator")
+    if platform == "darwin":
+        return repr([
+            emulator,
+            "emulator/qemu/darwin-aarch64/qemu-system-aarch64",
+        ])
+    return repr([
+        emulator,
+        _emulator_qemu_i386_label(platform),
+    ])
+
+def _qemu2_srcs_expr(platform):
+    return "[\"{}\"] + glob([\"emulator/qemu/**\"], allow_empty = True)".format(_emulator_tool_label(platform, "emulator"))
+
+def _platform_emulator_aliases(emulator):
+    if not emulator:
+        return ""
+    if len(emulator["platforms"]) != 1:
+        fail("Expected exactly one emulator platform for direct aliases, got [{}].".format(format_platforms(emulator["platforms"])))
+
+    platform = emulator["platforms"][0]
+    blocks = []
+    for name in ["emulator", "emulator_arm", "emulator_x86"]:
+        blocks.append(_plain_alias(
+            name,
+            _emulator_tool_label(platform, "emulator"),
+            tags = ["manual"],
+        ))
+    blocks.extend([
+        _plain_alias(
+            "mksd",
+            _emulator_tool_label(platform, "mksdcard"),
+            tags = ["manual"],
+        ),
+        _glob_filegroup(
+            "emulator_x86_bios",
+            ["emulator/lib/pc-bios/*"],
+            tags = ["manual"],
+        ),
+        _glob_filegroup(
+            "emulator_shared_libs",
+            ["emulator/lib64/**"],
+            tags = ["manual"],
+        ),
+        _plain_filegroup(
+            "qemu2_x86",
+            _qemu2_x86_srcs_expr(platform),
+            tags = ["manual"],
+        ),
+        _plain_filegroup(
+            "qemu2",
+            _qemu2_srcs_expr(platform),
+            tags = ["manual"],
+        ),
+    ])
+    return "\n\n".join(blocks)
 
 def _platform_direct_aliases(platform, build_tools_directory):
     aliases = [
@@ -472,11 +670,14 @@ def _sdk_for_platform(sdk, platform):
     platform_sdk["platforms"] = [platform]
     return platform_sdk
 
-def _platform_redirect_alias(rctx, sdk, name):
+def _platform_redirect_alias_for_platforms(rctx, platforms, name):
     return select_alias(name, [
         (platform_condition(platform), external_label(platform_repository(rctx, platform, "SDK"), name))
-        for platform in sdk["platforms"]
+        for platform in platforms
     ], tags = ["manual"])
+
+def _platform_redirect_alias(rctx, sdk, name):
+    return _platform_redirect_alias_for_platforms(rctx, sdk["platforms"], name)
 
 def _platform_redirect_aliases(rctx, sdk):
     blocks = [
@@ -497,6 +698,94 @@ def _platform_redirect_aliases(rctx, sdk):
         _platform_redirect_alias(rctx, sdk, "zipalign_binary"),
     ]
     return "\n\n".join(blocks)
+
+def _emulator_redirect_aliases(rctx, emulator):
+    if not emulator:
+        return ""
+    blocks = [
+        _platform_redirect_alias_for_platforms(rctx, emulator["platforms"], "emulator"),
+        _platform_redirect_alias_for_platforms(rctx, emulator["platforms"], "emulator_arm"),
+        _platform_redirect_alias_for_platforms(rctx, emulator["platforms"], "emulator_x86"),
+        _platform_redirect_alias_for_platforms(rctx, emulator["platforms"], "emulator_shared_libs"),
+        _platform_redirect_alias_for_platforms(rctx, emulator["platforms"], "emulator_x86_bios"),
+        _platform_redirect_alias_for_platforms(rctx, emulator["platforms"], "mksd"),
+        _platform_redirect_alias_for_platforms(rctx, emulator["platforms"], "qemu2"),
+        _platform_redirect_alias_for_platforms(rctx, emulator["platforms"], "qemu2_x86"),
+    ]
+    return "\n\n".join(blocks)
+
+def _system_image_dirs(system_images):
+    return [
+        "system-images/{}".format(system_image["directory"])
+        for system_image in system_images
+    ]
+
+_SYSTEM_IMAGE_TAGS = {
+    "android-tv": "tv",
+    "android-wear": "wear",
+    "default": "android",
+    "google_apis": "google",
+    "google_apis_playstore": "playstore",
+}
+
+_RULES_ANDROID_SYSTEM_IMAGE_ARCHES = {
+    "armeabi-v7a": "arm",
+    "x86": "x86",
+}
+
+def _system_image_target_name(directory):
+    parts = directory.split("/")
+    api = parts[0].split("-", 1)[1]
+    tag = _SYSTEM_IMAGE_TAGS.get(parts[1])
+    if not tag:
+        fail("Unsupported Android system image tag directory {}.".format(repr(parts[1])))
+    return "emulator_images_{}_{}_{}".format(tag, api, parts[2])
+
+def _extra_system_image_filegroups(system_images):
+    if not system_images:
+        return ""
+    blocks = []
+    for system_image in system_images:
+        directory = system_image["directory"]
+        arch = directory.split("/")[-1]
+        if arch in _RULES_ANDROID_SYSTEM_IMAGE_ARCHES:
+            continue
+        name = _system_image_target_name(directory)
+        path = "system-images/{}".format(directory)
+        blocks.extend([
+            """filegroup(
+    name = "{name}",
+    srcs = glob(["{path}/**"]),
+)""".format(
+                name = name,
+                path = path,
+            ),
+            """filegroup(
+    name = "{name}_qemu2_extra",
+    srcs = glob(["{path}/kernel-ranchu"], allow_empty = True),
+)""".format(
+                name = name,
+                path = path,
+            ),
+        ])
+    return "\n\n".join(blocks)
+
+def _system_image_filegroups(system_images):
+    if not system_images:
+        return ""
+    return """create_system_images_filegroups(
+    system_image_dirs = {},
+)
+
+{}
+
+exports_files(
+    glob(["system-images/**"], allow_empty = True),
+)
+""".format(
+        repr(_system_image_dirs(system_images)),
+        _extra_system_image_filegroups(system_images),
+    )
 
 def _platform_redirect_rules_for(platform):
     blocks = []
@@ -539,13 +828,16 @@ def _hermetic_android_sdk_platform_repository_impl(rctx):
 
     require_license(rctx, ANDROID_SDK_LICENSE_ENV, "SDK")
     sdk = _sdk_for_platform(_resolve_sdk(rctx), rctx.attr.platform)
+    emulator = _resolve_emulator(rctx, sdk["platforms"], require_common_platforms = False)
     _download_sdk_platform_tools(rctx, sdk)
+    _download_emulator(rctx, emulator)
     _write_runner_scripts(rctx, sdk)
 
     rctx.template(
         "BUILD.bazel",
         Label("//sdk:BUILD.androidsdk.tpl"),
         substitutions = {
+            "%{emulator_aliases}": _platform_emulator_aliases(emulator),
             "%{platform_aliases}": _platform_aliases(sdk),
             "%{platform_rules}": _platform_rules(sdk),
         },
@@ -564,11 +856,13 @@ hermetic_android_sdk_platform_repository = repository_rule(
         "build_tools_strip_prefixes": attr.string_dict(),
         "build_tools_urls": attr.string_dict(),
         "build_tools_version": attr.string(mandatory = True),
+        "emulator_version": attr.string(),
         "platform_tools_sha256s": attr.string_dict(),
         "platform_tools_urls": attr.string_dict(),
         "platforms_sha256": attr.string(),
         "platforms_strip_prefix": attr.string(),
         "platforms_url": attr.string(),
+        "system_images": attr.string_list(),
         "platform": attr.string(mandatory = True, values = sorted(ANDROID_PLATFORMS.keys())),
         "version": attr.string(mandatory = True),
         "_versions_json": attr.label(
@@ -587,6 +881,10 @@ def _hermetic_android_sdk_repository_impl(rctx):
 
     require_license(rctx, ANDROID_SDK_LICENSE_ENV, "SDK")
     sdk = _resolve_sdk(rctx)
+    emulator = _resolve_emulator(rctx, sdk["platforms"], require_common_platforms = True)
+    versions_json = json.decode(rctx.read(rctx.attr._versions_json))
+    system_images = _resolve_system_images(rctx, versions_json)
+    _download_system_images(rctx, system_images)
     _download_component(
         rctx,
         url = sdk["platforms_url"],
@@ -603,9 +901,11 @@ def _hermetic_android_sdk_repository_impl(rctx):
             "%{api_level}": sdk["api_level"],
             "%{build_tools_directory}": sdk["build_tools_directory"],
             "%{build_tools_version}": sdk["build_tools_version"],
+            "%{emulator_aliases}": _emulator_redirect_aliases(rctx, emulator),
             "%{platform_aliases}": _platform_redirect_aliases(rctx, sdk),
             "%{platform_rules}": _platform_redirect_rules(sdk),
             "%{optional_java_imports}": _optional_java_imports(sdk["api_level"]),
+            "%{system_image_filegroups}": _system_image_filegroups(system_images),
         },
     )
 
@@ -622,12 +922,14 @@ hermetic_android_sdk_repository = repository_rule(
         "build_tools_strip_prefixes": attr.string_dict(),
         "build_tools_urls": attr.string_dict(),
         "build_tools_version": attr.string(mandatory = True),
+        "emulator_version": attr.string(),
         "platform_repositories": attr.string_dict(mandatory = True),
         "platform_tools_sha256s": attr.string_dict(),
         "platform_tools_urls": attr.string_dict(),
         "platforms_sha256": attr.string(),
         "platforms_strip_prefix": attr.string(),
         "platforms_url": attr.string(),
+        "system_images": attr.string_list(),
         "version": attr.string(mandatory = True),
         "_versions_json": attr.label(
             default = Label("//sdk:versions.json"),

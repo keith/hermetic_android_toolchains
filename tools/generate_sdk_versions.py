@@ -16,6 +16,8 @@ _ROOT = Path(__file__).resolve().parents[1]
 _OUTPUT = _ROOT / "sdk" / "versions.json"
 _BASE_URL = "https://dl.google.com/android/repository/"
 _REPOSITORY_URL = _BASE_URL + "repository2-3.xml"
+_SYSTEM_IMAGES_REPOSITORY_URL = _BASE_URL + "sys-img/android/sys-img2-3.xml"
+_SYSTEM_IMAGES_FILE_PREFIX = "sys-img/android/"
 
 _ARCHIVE_PLATFORMS = ("darwin", "linux", "windows")
 _MANIFEST_PLATFORMS = {"linux": "linux", "macosx": "darwin", "windows": "windows"}
@@ -24,6 +26,9 @@ _MIN_API = 24  # Chosen at random
 _PLATFORM_RE = re.compile(r"^platforms;android-(\d+(?:\.\d+)?)$")
 _BUILD_TOOLS_RE = re.compile(r"^build-tools;(\d+(?:\.\d+)*)$")
 _FINAL_RE = re.compile(r"^\d+(?:\.\d+)*$")
+_SYSTEM_IMAGE_RE = re.compile(
+    r"^system-images;android-(\d+(?:\.\d+)?);([^;]+);([^;]+)$"
+)
 
 
 def _fetch_xml(url):
@@ -59,7 +64,7 @@ def _is_supported_version(version, min_api):
     return _FINAL_RE.fullmatch(version) and _version_key(version)[0] >= min_api
 
 
-def _parse_packages(root):
+def _parse_packages(root, file_prefix=""):
     stable = _stable_channel(root)
     packages = []
     for pkg in root.findall("remotePackage"):
@@ -84,14 +89,15 @@ def _parse_packages(root):
                 )
 
             manifest_platform = archive.findtext("host-os")
+            file_name = file_prefix + url
             archives.append(
                 {
-                    "file": url,
+                    "file": file_name,
                     "platform": _MANIFEST_PLATFORMS.get(manifest_platform)
                     if manifest_platform
                     else None,
                     "sha1": checksum.text,
-                    "url": _BASE_URL + url,
+                    "url": _BASE_URL + file_name,
                 }
             )
 
@@ -114,6 +120,15 @@ def _latest_by_path(packages):
     return latest
 
 
+def _by_path(packages):
+    by_path = {}
+    for pkg in packages:
+        by_path.setdefault(pkg["path"], []).append(pkg)
+    for path in by_path:
+        by_path[path] = sorted(by_path[path], key=lambda pkg: pkg["revision"])
+    return by_path
+
+
 def _single_archive(pkg):
     if len(pkg["archives"]) != 1 or pkg["archives"][0]["platform"] is not None:
         raise ValueError(
@@ -131,7 +146,7 @@ def _platform_archive(pkg, platform):
     if platform == "darwin":
         return sorted(
             candidates,
-            key=lambda archive: ("x64" not in archive["file"], archive["file"]),
+            key=lambda archive: ("aarch64" not in archive["file"], archive["file"]),
         )[0]
     return sorted(candidates, key=lambda archive: archive["file"])[0]
 
@@ -238,10 +253,64 @@ def _merge_build_tools(existing_components, version, pkg, metadata):
     return dict(sorted(build_tools.items(), key=lambda item: _version_key(item[0])))
 
 
+def _merge_emulator(existing_components, emulator_packages, metadata):
+    existing = dict(existing_components.get("emulator", {}))
+    packages_by_version = {
+        _revision_name(pkg["revision"]): pkg for pkg in emulator_packages
+    }
+
+    emulator = {}
+    for version, pkg in packages_by_version.items():
+        emulator[version] = {"archives": _platform_archives_json(pkg, metadata)}
+    for version, component in existing.items():
+        emulator.setdefault(version, component)
+    return dict(sorted(emulator.items(), key=lambda item: _version_key(item[0])))
+
+
+def _system_image_directory(path):
+    match = _SYSTEM_IMAGE_RE.fullmatch(path)
+    if not match:
+        raise ValueError("unsupported system image path {}".format(path))
+    return "android-{}/{}".format(match.group(1), "/".join(match.groups()[1:]))
+
+
+def _is_supported_system_image(pkg):
+    match = _SYSTEM_IMAGE_RE.fullmatch(pkg["path"])
+    if not match:
+        return False
+    api_level, tag, _arch = match.groups()
+    if tag != "default" or not _is_supported_version(api_level, _MIN_API):
+        return False
+    return len(pkg["archives"]) == 1 and pkg["archives"][0]["platform"] is None
+
+
+def _generate_system_images(existing_components, system_image_packages, metadata):
+    system_images = {}
+    for path, pkg in system_image_packages.items():
+        if not _is_supported_system_image(pkg):
+            continue
+        directory = _system_image_directory(path)
+        system_images[directory] = _archive_json(
+            _single_archive(pkg),
+            metadata,
+            infer_prefix=True,
+        )
+    for directory, archive in existing_components.get("system_images", {}).items():
+        system_images.setdefault(directory, archive)
+    return dict(sorted(system_images.items(), key=lambda item: item[0]))
+
+
 def _generate():
     metadata, existing_components = _load_existing(_OUTPUT)
     repo_packages = _parse_packages(_fetch_xml(_REPOSITORY_URL))
     repo = _latest_by_path(repo_packages)
+    repo_by_path = _by_path(repo_packages)
+    system_image_packages = _latest_by_path(
+        _parse_packages(
+            _fetch_xml(_SYSTEM_IMAGES_REPOSITORY_URL),
+            file_prefix=_SYSTEM_IMAGES_FILE_PREFIX,
+        )
+    )
 
     platforms = _matching_versions(repo, _PLATFORM_RE, _MIN_API)
     build_tools = _matching_versions(repo, _BUILD_TOOLS_RE, _MIN_API)
@@ -257,11 +326,21 @@ def _generate():
             build_tools[build_tools_version],
             metadata,
         ),
+        "emulator": _merge_emulator(
+            existing_components,
+            repo_by_path.get("emulator", []),
+            metadata,
+        ),
         "platform_tools": {
             platform_tools_version: {
                 "archives": _platform_archives_json(platform_tools_pkg, metadata),
             },
         },
+        "system_images": _generate_system_images(
+            existing_components,
+            system_image_packages,
+            metadata,
+        ),
     }
 
     versions = {}

@@ -11,17 +11,23 @@ load("//private:utils.bzl", "ANDROID_PLATFORMS")
 load(
     "//sdk:repositories.bzl",
     "ANDROID_SDK_LICENSE_ENV",
+    "EMULATOR_TAG",
     "SDK_TAG",
+    "SYSTEM_IMAGE_TAG",
     "hermetic_android_sdk_platform_repository",
     "hermetic_android_sdk_repository",
 )
 
-def _single_root_tag(module_ctx, tag_name):
+def _root_tags(module_ctx, tag_name):
     root_tags = []
     for module in module_ctx.modules:
         tags = getattr(module.tags, tag_name)
         if module.is_root and tags:
             root_tags.extend(tags)
+    return root_tags
+
+def _single_root_tag(module_ctx, tag_name):
+    root_tags = _root_tags(module_ctx, tag_name)
 
     if len(root_tags) > 1:
         fail("Expected at most one root android.{}(...) tag, found {}.".format(tag_name, len(root_tags)))
@@ -51,6 +57,24 @@ def _sdk_kwargs(tag):
         "version": tag.version,
     }
 
+def _emulator_kwargs(tag):
+    if not tag:
+        return {}
+    return {"emulator_version": tag.version}
+
+def _system_image_directory(tag):
+    version = tag.version
+    if not version.startswith("android-"):
+        version = "android-{}".format(version)
+    return "{}/default/{}".format(version, tag.arch)
+
+def _system_images_kwargs(tags):
+    directories = {}
+    for tag in tags:
+        directory = _system_image_directory(tag)
+        directories[directory] = True
+    return {"system_images": sorted(directories.keys())}
+
 def _ndk_kwargs(tag):
     if not tag:
         return None
@@ -67,6 +91,9 @@ def _ndk_kwargs(tag):
 
 def _android_impl(module_ctx):
     sdk = _sdk_kwargs(_single_root_tag(module_ctx, "sdk"))
+    emulator = _emulator_kwargs(_single_root_tag(module_ctx, "emulator"))
+    system_images = _system_images_kwargs(_root_tags(module_ctx, "system_image"))
+    kwargs = sdk | emulator | system_images
     root_module_direct_dev_deps = ["androidsdk"]
 
     sdk_platform_repositories = {}
@@ -75,13 +102,13 @@ def _android_impl(module_ctx):
         hermetic_android_sdk_platform_repository(
             name = name,
             platform = platform,
-            **sdk
+            **kwargs
         )
         sdk_platform_repositories[platform] = name
     hermetic_android_sdk_repository(
         name = "androidsdk",
         platform_repositories = sdk_platform_repositories,
-        **sdk
+        **kwargs
     )
 
     ndk = _ndk_kwargs(_single_root_tag(module_ctx, "ndk"))
@@ -115,7 +142,9 @@ android = module_extension(
         ANDROID_SDK_LICENSE_ENV,
     ],
     tag_classes = {
+        "emulator": EMULATOR_TAG,
         "ndk": NDK_TAG,
         "sdk": SDK_TAG,
+        "system_image": SYSTEM_IMAGE_TAG,
     },
 )

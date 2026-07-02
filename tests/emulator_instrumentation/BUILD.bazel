@@ -1,0 +1,22 @@
+load("@rules_android//rules:rules.bzl", "android_binary")
+load(":android_emulator_instrumentation_test.bzl", "android_emulator_instrumentation_test")
+
+android_binary(
+    name = "host_app",
+    testonly = True,
+    srcs = ["HostActivity.java"],
+    manifest = "HostAndroidManifest.xml",
+)
+
+android_binary(
+    name = "instrumentation_app",
+    testonly = True,
+    srcs = ["SmokeInstrumentation.java"],
+    instruments = ":host_app",
+    manifest = "TestAndroidManifest.xml",
+)
+
+android_emulator_instrumentation_test(
+    name = "emulator_instrumentation_test",
+    test_app = ":instrumentation_app",
+)

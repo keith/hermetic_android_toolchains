@@ -82,6 +82,27 @@
         }
       }
     },
+    "emulator": {
+      "36.6.11": {
+        "archives": {
+          "darwin": {
+            "file": "emulator-darwin_aarch64-15507667.zip",
+            "sha256": "aebcd4dde29a4921d47e5e79b8c1ffece69a70f5b280d8dc7033ebaffa737072",
+            "strip_prefix": "emulator"
+          },
+          "linux": {
+            "file": "emulator-linux_x64-15507667.zip",
+            "sha256": "1eade4cf2df6ea8eeead4902c635897ba12aaa32aac4389eaae0fdb498a5b830",
+            "strip_prefix": "emulator"
+          },
+          "windows": {
+            "file": "emulator-windows_x64-15507667.zip",
+            "sha256": "7dfb2c47291db7e0fd7ce45e541706d45827bc9875f5f736bf785585b549e0e4",
+            "strip_prefix": "emulator"
+          }
+        }
+      }
+    },
     "platform_tools": {
       "37.0.0": {
         "archives": {
@@ -101,6 +122,163 @@
             "strip_prefix": "platform-tools"
           }
         }
+      }
+    },
+    "system_images": {
+      "android-24/default/arm64-v8a": {
+        "file": "sys-img/android/arm64-v8a-24_r09.zip",
+        "sha256": "3c3a70dcffe8c162984ec190fc3388bf237b241b3ba80bf7aa5c86e130d8f59b",
+        "strip_prefix": "arm64-v8a"
+      },
+      "android-24/default/armeabi-v7a": {
+        "file": "sys-img/android/armeabi-v7a-24_r07.zip",
+        "sha256": "42690977fe4b97b0643da11a2b42742b2e3d5b8849dcdd6893e0b92d6618c91d",
+        "strip_prefix": "armeabi-v7a"
+      },
+      "android-24/default/x86": {
+        "file": "sys-img/android/x86-24_r08.zip",
+        "sha256": "ef242578ed86f73fd4be27935d094d58f2c4b7ab53362b74978e2257a8df3bba",
+        "strip_prefix": "x86"
+      },
+      "android-24/default/x86_64": {
+        "file": "sys-img/android/x86_64-24_r08.zip",
+        "sha256": "c122b69f70a229186314ec9a6f7abedcc7a6ff7ed52cb6fdce0d4f1585c09f92",
+        "strip_prefix": "x86_64"
+      },
+      "android-25/default/arm64-v8a": {
+        "file": "sys-img/android/arm64-v8a-25_r02.zip",
+        "sha256": "1d38666f6e64f983e0d3ad86ef5c42d213685fcd6932a0f2dfbcee0e79767cc2",
+        "strip_prefix": "arm64-v8a"
+      },
+      "android-25/default/x86": {
+        "file": "sys-img/android/x86-25_r01.zip",
+        "sha256": "a9908b08e295e00cf03261f7f276744cf31ba8be6a065a063239e2a14a57b3da",
+        "strip_prefix": "x86"
+      },
+      "android-25/default/x86_64": {
+        "file": "sys-img/android/x86_64-25_r01.zip",
+        "sha256": "746d233fcb2241cc0e599175cb0e909dee6c296c003003af6c8fefa6dea1b185",
+        "strip_prefix": "x86_64"
+      },
+      "android-26/default/arm64-v8a": {
+        "file": "sys-img/android/arm64-v8a-26_r02.zip",
+        "sha256": "74785c6d7ce73a12e730bd2bceb075fb4c68e0052c8f79b78f9322b722c2923c",
+        "strip_prefix": "arm64-v8a"
+      },
+      "android-26/default/x86": {
+        "file": "sys-img/android/x86-26_r01.zip",
+        "sha256": "3177b721ab4d616fcc05d5e5eb2c175e20fe4d2afd1f4ea5ef62cc4d347c7a0f",
+        "strip_prefix": "x86"
+      },
+      "android-26/default/x86_64": {
+        "file": "sys-img/android/x86_64-26_r01.zip",
+        "sha256": "78a79eb02751b19b6626b785f05d5b0ab3a283596fe9d29e54905090a36fe77d",
+        "strip_prefix": "x86_64"
+      },
+      "android-27/default/arm64-v8a": {
+        "file": "sys-img/android/arm64-v8a-27_r02.zip",
+        "sha256": "5e079c20e557c6e0191932aea2e832a340b7ed66fbfa8b87f6141517cc73992c",
+        "strip_prefix": "arm64-v8a"
+      },
+      "android-27/default/x86": {
+        "file": "sys-img/android/x86-27_r01.zip",
+        "sha256": "84a90d758459b500857de8bfa78dbbac1a975d57766256ac048351f2b195b287",
+        "strip_prefix": "x86"
+      },
+      "android-27/default/x86_64": {
+        "file": "sys-img/android/x86_64-27_r01.zip",
+        "sha256": "40b5a99b4515c32e06ffd7df4939befb22b83f4df9c6b122b8eea2cfeef553e4",
+        "strip_prefix": "x86_64"
+      },
+      "android-28/default/arm64-v8a": {
+        "file": "sys-img/android/arm64-v8a-28_r02.zip",
+        "sha256": "86844d2edf6ba7c7f11261f6be3fb37788c985cfcf3b8924cfe9f57a1ccbc0a9",
+        "strip_prefix": "arm64-v8a"
+      },
+      "android-28/default/x86": {
+        "file": "sys-img/android/x86-28_r04.zip",
+        "sha256": "7c3615c55b64713fe56842a12fe6827d6792cb27a9f95f9fa3aee1ff1be47f16",
+        "strip_prefix": "x86"
+      },
+      "android-28/default/x86_64": {
+        "file": "sys-img/android/x86_64-28_r04.zip",
+        "sha256": "ff6ce81aa1424951a214da5f392f8e12382de46d33c08aeaa5d21caba6a39b62",
+        "strip_prefix": "x86_64"
+      },
+      "android-29/default/arm64-v8a": {
+        "file": "sys-img/android/arm64-v8a-29_r08.zip",
+        "sha256": "7fd1610e16a69ac2e202278e82077de134ce404fe099d872019f69f3a340acdd",
+        "strip_prefix": "arm64-v8a"
+      },
+      "android-30/default/arm64-v8a": {
+        "file": "sys-img/android/arm64-v8a-30_r02.zip",
+        "sha256": "cb50112cf2dd234a71e2a29b0241c23dbb37dd5fc3156c68cc9c49d0f58ad304",
+        "strip_prefix": "arm64-v8a"
+      },
+      "android-30/default/x86_64": {
+        "file": "sys-img/android/x86_64-30_r11.zip",
+        "sha256": "8d591034a4244a920d7a3ec274bb1734dd6474a3d8c11d0fce902010db3a13aa",
+        "strip_prefix": "x86_64"
+      },
+      "android-31/default/arm64-v8a": {
+        "file": "sys-img/android/arm64-v8a-31_r03.zip",
+        "sha256": "75e18261311189a641b6880e4427d5f90b7c4e9b0cc7c4ff38c70b6f447b39d8",
+        "strip_prefix": "arm64-v8a"
+      },
+      "android-31/default/x86_64": {
+        "file": "sys-img/android/x86_64-31_r05.zip",
+        "sha256": "f77492768c6449a20d101a2fc0f32865a0aca6067dae6de4e94073fbceda9bca",
+        "strip_prefix": "x86_64"
+      },
+      "android-32/default/arm64-v8a": {
+        "file": "sys-img/android/arm64-v8a-32_r02.zip",
+        "sha256": "cee6aab64d859bb9a0b93628638c46e36d5e1c8364410f53a5e74f197b9fa9e6",
+        "strip_prefix": "arm64-v8a"
+      },
+      "android-32/default/x86_64": {
+        "file": "sys-img/android/x86_64-32_r02.zip",
+        "sha256": "909e42c2b1f0966bbe135db2bd2e5c54e9ca40c70cf414739cea653a9fe28f42",
+        "strip_prefix": "x86_64"
+      },
+      "android-33/default/arm64-v8a": {
+        "file": "sys-img/android/arm64-v8a-33_r02.zip",
+        "sha256": "55ba9a20d473dd5351c77342016956342c40375f3e073b65a43dc9db13ccc5c6",
+        "strip_prefix": "arm64-v8a"
+      },
+      "android-33/default/x86_64": {
+        "file": "sys-img/android/x86_64-33_r02.zip",
+        "sha256": "297a7384ceb7a3d050d78c98c11e166dd3985ccb72bfa6d13b56b71a4aa5bc22",
+        "strip_prefix": "x86_64"
+      },
+      "android-34/default/arm64-v8a": {
+        "file": "sys-img/android/arm64-v8a-34_r04.zip",
+        "sha256": "1447958a4c6747c44390ac5f5f4c894be6d1dfce93868a0385a95c5f0ae4c339",
+        "strip_prefix": "arm64-v8a"
+      },
+      "android-34/default/x86_64": {
+        "file": "sys-img/android/x86_64-34_r04.zip",
+        "sha256": "b57f6386af25b0fe5488e77196b43c03778c6760e6f4311611d090391b9cb2b3",
+        "strip_prefix": "x86_64"
+      },
+      "android-35/default/arm64-v8a": {
+        "file": "sys-img/android/arm64-v8a-35_r02.zip",
+        "sha256": "1e6ae4fca6449c07278a333311f0ef29c5101d1e3e18ba48fbe9bd2dc5006926",
+        "strip_prefix": "arm64-v8a"
+      },
+      "android-35/default/x86_64": {
+        "file": "sys-img/android/x86_64-35_r02.zip",
+        "sha256": "6dd7de33e63ef105cf2fabea6badda1dbe7665c96d8908e5f6e1407e63ff4556",
+        "strip_prefix": "x86_64"
+      },
+      "android-36/default/arm64-v8a": {
+        "file": "sys-img/android/arm64-v8a-36_r02.zip",
+        "sha256": "c6194eb8ace128b174ea86b5fbc0c78204147123b3b5ce6d0e3d615a06ad31d1",
+        "strip_prefix": "arm64-v8a"
+      },
+      "android-36/default/x86_64": {
+        "file": "sys-img/android/x86_64-36_r02.zip",
+        "sha256": "e1b9d9fb665001ef27b16e57d8762a2d54aec6bff617e17506edb8676667b9da",
+        "strip_prefix": "x86_64"
       }
     }
   },
