@@ -164,6 +164,7 @@ EOF
       -no-window \
       -no-audio \
       -no-boot-anim \
+      -no-metrics \
       -no-snapshot \
       -no-snapshot-save \
       -wipe-data \
