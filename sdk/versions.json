@@ -209,6 +209,13 @@
         "file": "platform-37.0_r02.zip",
         "sha256": "840b23e827f96e64aea4c89a1194aac3dc5f6bad37edb231c5c795d890330e8d"
       }
+    },
+    "37.1": {
+      "platform_tools_version": "37.0.0",
+      "platform": {
+        "file": "platform-37.1_r01.zip",
+        "sha256": "cadf0a541847820ea3d8ffc5c192562a18376cf9ba510bf9659c772f9a442184"
+      }
     }
   }
 }
