@@ -6,6 +6,7 @@ android_binary(
     testonly = True,
     srcs = ["HostActivity.java"],
     manifest = "HostAndroidManifest.xml",
+    # https://github.com/bazelbuild/rules_android/pull/532
     tags = ["manual"],
 )
 
@@ -15,6 +16,7 @@ android_binary(
     srcs = ["SmokeInstrumentation.java"],
     instruments = ":host_app",
     manifest = "TestAndroidManifest.xml",
+    # https://github.com/bazelbuild/rules_android/pull/532
     tags = ["manual"],
 )
 
