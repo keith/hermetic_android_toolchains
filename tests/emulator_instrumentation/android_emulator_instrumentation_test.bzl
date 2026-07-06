@@ -2,6 +2,8 @@
 
 load("@rules_android//providers:providers.bzl", "AndroidInstrumentationInfo", "ApkInfo")
 
+visibility("private")
+
 def _single_file_with_basename(files, basename, owner):
     matches = [file for file in files if file.basename == basename]
     if len(matches) != 1:
