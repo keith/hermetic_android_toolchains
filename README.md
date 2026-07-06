@@ -48,6 +48,38 @@ SDK, build-tools, and NDK versions are explicit. Use
 `android.ndk(version = "r25c", api_level = ...)` to specify a different
 API level for the NDK.
 
+## Downloading emulators
+
+If you'd like to hermetically download and expose emulator tools and
+system images, you can add the following to your `MODULE.bazel`:
+
+```bzl
+android.emulator(version = "36.6.11")
+android.system_image(
+    arch = "arm64-v8a",
+    version = "28",
+)
+android.system_image(
+    arch = "x86_64",
+    version = "28",
+)
+# Repeat for each system image you want to download
+```
+
+Afterwards the downloads are exposed through various `@androidsdk`
+labels mirroring what `rules_android` does such as:
+
+```
+@androidsdk//:platform-tools/adb
+@androidsdk//:emulator
+@androidsdk//:emulator_shared_libs
+@androidsdk//:emulator_x86_bios
+@androidsdk//:mksd
+@androidsdk//:qemu2
+@androidsdk//:emulator_images_android_28_arm64-v8a  # Version / arch dependent
+@androidsdk//:emulator_images_android_28_arm64-v8a_qemu2_extra  # Version / arch dependent
+```
+
 ## Specifying versions
 
 This repo includes metadata for many Android SDK and NDK versions so you

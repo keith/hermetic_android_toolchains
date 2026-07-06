@@ -1,0 +1,37 @@
+load("@rules_android//rules:rules.bzl", "android_binary")
+load(":android_emulator_instrumentation_test.bzl", "android_emulator_instrumentation_test")
+
+android_binary(
+    name = "host_app",
+    testonly = True,
+    srcs = ["HostActivity.java"],
+    manifest = "HostAndroidManifest.xml",
+    # https://github.com/bazelbuild/rules_android/pull/532
+    tags = ["manual"],
+)
+
+android_binary(
+    name = "instrumentation_app",
+    testonly = True,
+    srcs = ["SmokeInstrumentation.java"],
+    instruments = ":host_app",
+    manifest = "TestAndroidManifest.xml",
+    # https://github.com/bazelbuild/rules_android/pull/532
+    tags = ["manual"],
+)
+
+android_emulator_instrumentation_test(
+    name = "emulator_instrumentation_test",
+    system_image = select({
+        "//:platform_darwin": "@androidsdk//:emulator_images_android_28_arm64-v8a",
+        "//:platform_linux": "@androidsdk//:emulator_images_android_28_x86_64",
+        "//:platform_windows": "@androidsdk//:emulator_images_android_28_x86_64",
+    }),
+    system_image_qemu2_extra = select({
+        "//:platform_darwin": "@androidsdk//:emulator_images_android_28_arm64-v8a_qemu2_extra",
+        "//:platform_linux": "@androidsdk//:emulator_images_android_28_x86_64_qemu2_extra",
+        "//:platform_windows": "@androidsdk//:emulator_images_android_28_x86_64_qemu2_extra",
+    }),
+    tags = ["manual"],
+    test_app = ":instrumentation_app",
+)

@@ -28,6 +28,8 @@ def collect_archives(metadata):
     archives = []
 
     for component_name, versions in sorted(metadata["components"].items()):
+        if component_name == "system_images":
+            continue
         for version, component in sorted(versions.items()):
             for platform, archive in sorted(component["archives"].items()):
                 archives.append(
@@ -37,6 +39,17 @@ def collect_archives(metadata):
                         archive["sha256"],
                     )
                 )
+
+    for directory, archive in sorted(
+        metadata["components"].get("system_images", {}).items()
+    ):
+        archives.append(
+            (
+                "system image {}".format(directory),
+                archive_url(archive),
+                archive["sha256"],
+            )
+        )
 
     for version, sdk in sorted(metadata["versions"].items()):
         platform = sdk["platform"]

@@ -2,6 +2,7 @@
 
 load(
     ":helper.bzl",
+    "create_system_images_filegroups",
     "string_flag",
 )
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
@@ -152,6 +153,8 @@ alias(
 
 %{platform_aliases}
 
+%{emulator_aliases}
+
 android_sdk(
     name = "sdk",
     aapt = select({
@@ -199,3 +202,5 @@ toolchain(
     toolchain = ":fail",
     toolchain_type = ":sdk_toolchain_type",
 )
+
+%{system_image_filegroups}

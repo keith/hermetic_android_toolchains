@@ -8,3 +8,5 @@ package(default_visibility = ["//visibility:public"])
 %{platform_rules}
 
 %{platform_aliases}
+
+%{emulator_aliases}
