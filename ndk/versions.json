@@ -30,7 +30,8 @@
     "r29-beta3": "29.0.13846066",
     "r29-beta4": "29.0.14033849",
     "r29": "29.0.14206865",
-    "r30-beta1": "30.0.14904198"
+    "r30-beta1": "30.0.14904198",
+    "r30-beta2": "30.0.15729638"
   },
   "versions": {
     "25.0.8151533": {
@@ -650,6 +651,26 @@
           "file": "android-ndk-r30-beta1-windows.zip",
           "sha1": "ec410335aac74d182b369a62c18079187b191149",
           "integrity": "sha1-7EEDNarHTRgrNppiwYB5GHsZEUk="
+        }
+      }
+    },
+    "30.0.15729638": {
+      "strip_prefix": "android-ndk-r30-beta2",
+      "archives": {
+        "darwin": {
+          "file": "android-ndk-r30-beta2-darwin.zip",
+          "sha1": "8742eb5075240884f74ed29ccd99d7a1f6852a6b",
+          "integrity": "sha1-h0LrUHUkCIT3TtKczZnXofaFKms="
+        },
+        "linux": {
+          "file": "android-ndk-r30-beta2-linux.zip",
+          "sha1": "069427047d18cc6e44369cd7b8e711bfc2c7a3b5",
+          "integrity": "sha1-BpQnBH0YzG5ENpzXuOcRv8LHo7U="
+        },
+        "windows": {
+          "file": "android-ndk-r30-beta2-windows.zip",
+          "sha1": "5b5e308db4cfd7a51f5524f464dedec20682b5ed",
+          "integrity": "sha1-W14wjbTP16UfVST0ZN7ewgaCte0="
         }
       }
     }
