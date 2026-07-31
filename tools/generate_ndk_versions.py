@@ -182,20 +182,33 @@ def _archives_json(pkg):
     }
 
 
-def _selected_versions(existing_versions, manifest_versions):
-    return {
-        version
-        for version in set(existing_versions) | set(manifest_versions)
-        if _NDK_PATH_RE.fullmatch("ndk;{}".format(version))
-        and _package_version_key(version) >= _MIN_PACKAGE_VERSION
-    }
+def _load_existing(path):
+    if not path.exists():
+        return {}
+
+    with path.open() as f:
+        return json.load(f)
+
+
+def _merge_preserving_existing(existing, generated):
+    result = dict(existing)
+    for name in ("aliases", "versions"):
+        values = dict(existing.get(name, {}))
+        for key, value in generated.get(name, {}).items():
+            values.setdefault(key, value)
+        result[name] = values
+
+    for key, value in generated.items():
+        result.setdefault(key, value)
+    return result
 
 
 def _generate():
+    existing = _load_existing(_OUTPUT)
     manifest_versions, aliases = _parse_packages(_fetch_xml(_REPOSITORY_URL))
     versions = {}
 
-    for version in _selected_versions({}, manifest_versions):
+    for version in manifest_versions:
         alias = manifest_versions[version]["alias"]
         versions[version] = {
             "strip_prefix": "android-ndk-{}".format(alias),
@@ -207,7 +220,7 @@ def _generate():
         for alias, version in aliases.items()
         if version in versions and _NDK_VERSION_RE.fullmatch(alias)
     }
-    return {
+    generated = {
         "aliases": dict(
             sorted(aliases.items(), key=lambda item: _version_key(item[0]))
         ),
@@ -215,6 +228,17 @@ def _generate():
             sorted(versions.items(), key=lambda item: _package_version_key(item[0]))
         ),
     }
+    merged = _merge_preserving_existing(existing, generated)
+    merged["aliases"] = dict(
+        sorted(merged["aliases"].items(), key=lambda item: _version_key(item[0]))
+    )
+    merged["versions"] = dict(
+        sorted(
+            merged["versions"].items(),
+            key=lambda item: _package_version_key(item[0]),
+        )
+    )
+    return merged
 
 
 def _main():

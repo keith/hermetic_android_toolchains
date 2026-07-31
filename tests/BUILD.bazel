@@ -12,6 +12,12 @@ py_test(
     tags = ["manual"],
 )
 
+py_test(
+    name = "generate_versions_test",
+    srcs = ["generate_versions_test.py"],
+    deps = ["//tools:generate_versions"],
+)
+
 action_command_line_test(
     name = "cc_compile_uses_hermetic_ndk_test",
     expected_argv = [
