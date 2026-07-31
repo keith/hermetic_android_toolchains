@@ -1,0 +1,10 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
+py_library(
+    name = "generate_versions",
+    srcs = [
+        "generate_ndk_versions.py",
+        "generate_sdk_versions.py",
+    ],
+    visibility = ["//tests:__pkg__"],
+)

@@ -184,7 +184,31 @@ def _load_existing(path):
 
     metadata = {}
     _collect_archive_metadata(data, metadata)
-    return metadata, data.get("components", {})
+    return metadata, data
+
+
+def _merge_registry(existing, generated):
+    result = dict(existing)
+    for key, value in generated.items():
+        result.setdefault(key, value)
+    return result
+
+
+def _merge_preserving_existing(existing, generated):
+    result = dict(existing)
+
+    components = dict(existing.get("components", {}))
+    for name, values in generated.get("components", {}).items():
+        components[name] = _merge_registry(components.get(name, {}), values)
+    result["components"] = components
+    result["versions"] = _merge_registry(
+        existing.get("versions", {}),
+        generated.get("versions", {}),
+    )
+
+    for key, value in generated.items():
+        result.setdefault(key, value)
+    return result
 
 
 def _hashes(path):
@@ -301,7 +325,8 @@ def _generate_system_images(existing_components, system_image_packages, metadata
 
 
 def _generate():
-    metadata, existing_components = _load_existing(_OUTPUT)
+    metadata, existing = _load_existing(_OUTPUT)
+    existing_components = existing.get("components", {})
     repo_packages = _parse_packages(_fetch_xml(_REPOSITORY_URL))
     repo = _latest_by_path(repo_packages)
     repo_by_path = _by_path(repo_packages)
@@ -352,7 +377,10 @@ def _generate():
             ),
         }
 
-    return {"components": components, "versions": versions}
+    return _merge_preserving_existing(
+        existing,
+        {"components": components, "versions": versions},
+    )
 
 
 def _main():
