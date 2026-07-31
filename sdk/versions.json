@@ -101,6 +101,25 @@
             "strip_prefix": "emulator"
           }
         }
+      },
+      "37.1.11": {
+        "archives": {
+          "darwin": {
+            "file": "emulator-darwin_aarch64-15917651.zip",
+            "sha256": "22530de9363f34ea945ecb5cad74523abd4b615f27f3c1a9899efb183ea9e144",
+            "strip_prefix": "emulator"
+          },
+          "linux": {
+            "file": "emulator-linux_x64-15917651.zip",
+            "sha256": "95771e0ae431897b2a4bd2d97fa095f29a8b0624a7b216baf529f9306161c266",
+            "strip_prefix": "emulator"
+          },
+          "windows": {
+            "file": "emulator-windows_x64-15917651.zip",
+            "sha256": "5ff441f3b12ace9b13e9cf96fb0007d233967718652a8110705e995ac47bfeb7",
+            "strip_prefix": "emulator"
+          }
+        }
       }
     },
     "platform_tools": {
@@ -119,6 +138,25 @@
           "windows": {
             "file": "platform-tools_r37.0.0-win.zip",
             "sha256": "4fe305812db074cea32903a489d061eb4454cbc90a49e8fea677f4b7af764918",
+            "strip_prefix": "platform-tools"
+          }
+        }
+      },
+      "37.0.1": {
+        "archives": {
+          "darwin": {
+            "file": "platform-tools_r37.0.1-darwin.zip",
+            "sha256": "ee39ad5967e95c2a07f04dbcbde96b1a0c916ba376096db5d2f498b7727a5d1d",
+            "strip_prefix": "platform-tools"
+          },
+          "linux": {
+            "file": "platform-tools_r37.0.1-linux.zip",
+            "sha256": "d230f13842f60f782a8645f9c813f8f845bf36089ea7289f28c48f17979313f1",
+            "strip_prefix": "platform-tools"
+          },
+          "windows": {
+            "file": "platform-tools_r37.0.1-win.zip",
+            "sha256": "45f4d63113e895ebde0c90f194099a4676b6ac653bd28d54314a9e022bbc1a99",
             "strip_prefix": "platform-tools"
           }
         }
