@@ -373,7 +373,7 @@ def _generate():
         versions[version] = {
             "platform_tools_version": platform_tools_version,
             "platform": _archive_json(
-                _single_archive(pkg), metadata, infer_prefix=False
+                _single_archive(pkg), metadata, infer_prefix=True
             ),
         }
 
