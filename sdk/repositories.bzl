@@ -61,7 +61,7 @@ SDK_TAG = tag_class(attrs = {
         doc = "Custom Android platform archive SHA-256.",
     ),
     "platforms_strip_prefix": attr.string(
-        doc = "Custom Android platform archive strip prefix.",
+        doc = "Top-level directory inside the custom Android platform archive. Defaults to android-<version>.",
     ),
 })
 
@@ -158,7 +158,7 @@ def _resolve_known_sdk(rctx, data, version, known):
         "platform_tools_urls": platform_tools_urls,
         "platforms": _common_platforms(build_tools_platforms, platform_tools_platforms),
         "platforms_sha256": platform["sha256"],
-        "platforms_strip_prefix": platform.get("strip_prefix", ""),
+        "platforms_strip_prefix": platform.get("strip_prefix", "android-{}".format(version)),
         "platforms_url": archive_url(platform),
     }
 
@@ -198,7 +198,7 @@ def _resolve_custom_sdk(rctx):
         "platform_tools_urls": platform_tools_urls,
         "platforms": _common_platforms(build_tools_platforms, platform_tools_platforms),
         "platforms_sha256": rctx.attr.platforms_sha256,
-        "platforms_strip_prefix": rctx.attr.platforms_strip_prefix,
+        "platforms_strip_prefix": rctx.attr.platforms_strip_prefix or "android-{}".format(version),
         "platforms_url": rctx.attr.platforms_url,
     }
 
@@ -889,7 +889,7 @@ def _hermetic_android_sdk_repository_impl(rctx):
         rctx,
         url = sdk["platforms_url"],
         sha256 = sdk["platforms_sha256"],
-        output = "platforms",
+        output = "platforms/android-{}".format(sdk["api_level"]),
         strip_prefix = sdk["platforms_strip_prefix"],
     )
 
