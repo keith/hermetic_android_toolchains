@@ -76,6 +76,11 @@ def _action_command_line_test_impl(ctx):
 
     return analysistest.end(env)
 
+_CONFIG_SETTINGS = {
+    # buildifier: disable=canonical-repository
+    "//command_line_option:platforms": "@@rules_android+//:x86_64",
+}
+
 action_command_line_test = analysistest.make(
     _action_command_line_test_impl,
     attrs = {
@@ -84,8 +89,19 @@ action_command_line_test = analysistest.make(
         "mnemonic": attr.string(mandatory = True),
         "not_expected_argv": attr.string_list(),
     },
-    config_settings = {
+    config_settings = _CONFIG_SETTINGS,
+)
+
+shared_libcpp_action_command_line_test = analysistest.make(
+    _action_command_line_test_impl,
+    attrs = {
+        "argv_filter": attr.string(),
+        "expected_argv": attr.string_list(),
+        "mnemonic": attr.string(mandatory = True),
+        "not_expected_argv": attr.string_list(),
+    },
+    config_settings = _CONFIG_SETTINGS | {
         # buildifier: disable=canonical-repository
-        "//command_line_option:platforms": "@@rules_android+//:x86_64",
+        "@@rules_android_ndk+//:use_shared_libcpp": True,
     },
 )
