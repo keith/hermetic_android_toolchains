@@ -325,70 +325,80 @@
       "platform_tools_version": "37.0.0",
       "platform": {
         "file": "platform-24_r02.zip",
-        "sha256": "f268f5945c6ece7ea95c1c252067280854d2a20da924e22ae4720287df8bdbc9"
+        "sha256": "f268f5945c6ece7ea95c1c252067280854d2a20da924e22ae4720287df8bdbc9",
+        "strip_prefix": "android-7.0"
       }
     },
     "25": {
       "platform_tools_version": "37.0.0",
       "platform": {
         "file": "platform-25_r03.zip",
-        "sha256": "9b742d34590fe73fb7229e34835ecffb1846ca389d9f924f0b2a37de525dc6b8"
+        "sha256": "9b742d34590fe73fb7229e34835ecffb1846ca389d9f924f0b2a37de525dc6b8",
+        "strip_prefix": "android-7.1.1"
       }
     },
     "26": {
       "platform_tools_version": "37.0.0",
       "platform": {
         "file": "platform-26_r02.zip",
-        "sha256": "2aafa7d19c5e9c4b643ee6ade3d85ef89dc2f79e8383efdb9baf7fddad74b52a"
+        "sha256": "2aafa7d19c5e9c4b643ee6ade3d85ef89dc2f79e8383efdb9baf7fddad74b52a",
+        "strip_prefix": "android-8.0.0"
       }
     },
     "27": {
       "platform_tools_version": "37.0.0",
       "platform": {
         "file": "platform-27_r03.zip",
-        "sha256": "020c4c090bc82ce87ebaae5d1a922e21b39a1d03c78ffa43f0c3e42fc7d28169"
+        "sha256": "020c4c090bc82ce87ebaae5d1a922e21b39a1d03c78ffa43f0c3e42fc7d28169",
+        "strip_prefix": "android-8.1.0"
       }
     },
     "28": {
       "platform_tools_version": "37.0.0",
       "platform": {
         "file": "platform-28_r06.zip",
-        "sha256": "8452dbbf9668a428abb243c4f02a943b7aa83af3cca627629a15c4c09f28e7bd"
+        "sha256": "8452dbbf9668a428abb243c4f02a943b7aa83af3cca627629a15c4c09f28e7bd",
+        "strip_prefix": "android-9"
       }
     },
     "29": {
       "platform_tools_version": "37.0.0",
       "platform": {
         "file": "platform-29_r05.zip",
-        "sha256": "951da8bf175254da74626824f919bd28def64f8828f29dd3b124a535cf4049d8"
+        "sha256": "951da8bf175254da74626824f919bd28def64f8828f29dd3b124a535cf4049d8",
+        "strip_prefix": "android-10"
       }
     },
     "30": {
       "platform_tools_version": "37.0.0",
       "platform": {
         "file": "platform-30_r03.zip",
-        "sha256": "f3f5b75744dbf6ee6ed3e8174a71e513bfee502d0bc3463ea97e517bff68d84e"
+        "sha256": "f3f5b75744dbf6ee6ed3e8174a71e513bfee502d0bc3463ea97e517bff68d84e",
+        "strip_prefix": "android-11"
       }
     },
     "31": {
       "platform_tools_version": "37.0.0",
       "platform": {
         "file": "platform-31_r01.zip",
-        "sha256": "1d69fe1d7f9788d82ff3a374faf4f6ccc9d1d372aa84a86b5bcfb517523b0b3f"
+        "sha256": "1d69fe1d7f9788d82ff3a374faf4f6ccc9d1d372aa84a86b5bcfb517523b0b3f",
+        "strip_prefix": "android-12"
       }
     },
     "32": {
       "platform_tools_version": "37.0.0",
       "platform": {
         "file": "platform-32_r01.zip",
-        "sha256": "01d8da1c900e70fcf5da39767d5444e39928935b1a5927055ce749fc348ca7ae"
+        "sha256": "01d8da1c900e70fcf5da39767d5444e39928935b1a5927055ce749fc348ca7ae",
+        "strip_prefix": "android-12"
       }
     },
     "33": {
       "platform_tools_version": "37.0.0",
       "platform": {
         "file": "platform-33-ext3_r03.zip",
-        "sha256": "b32b10f787867987f03ae8e101d217e053a9065b7136379fb353b388379aed1d"
+        "sha256": "b32b10f787867987f03ae8e101d217e053a9065b7136379fb353b388379aed1d",
+        "strip_prefix": "android-13"
       }
     },
     "34": {
