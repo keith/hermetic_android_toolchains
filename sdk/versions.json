@@ -442,6 +442,14 @@
         "file": "platform-37.1_r01.zip",
         "sha256": "cadf0a541847820ea3d8ffc5c192562a18376cf9ba510bf9659c772f9a442184"
       }
+    },
+    "37.2": {
+      "platform_tools_version": "37.0.1",
+      "platform": {
+        "file": "platform-37.2_r01.zip",
+        "sha256": "916410633df92a98da56aa7c87a1955f865f4d3b888373660794ef8173f72972",
+        "strip_prefix": "android-37.2"
+      }
     }
   }
 }
