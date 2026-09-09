@@ -151,7 +151,18 @@ def _generate_platform_build_files(rctx, ndk):
         clang_directory = _PLATFORMS[platform]["clang_directory"]
         sysroot_directory = "{}/sysroot".format(clang_directory)
         executable_extension = _PLATFORMS[platform]["executable_extension"]
+        exec_compatible_with = _PLATFORMS[platform]["constraints"][0][1]
         clang_resource_directory = _clang_resource_dir(rctx, clang_directory)
+
+        rctx.template(
+            "BUILD.bazel",
+            rctx.attr._template_ndk_root,
+            {
+                "{clang_directory}": clang_directory,
+                "{exec_compatible_with}": repr(exec_compatible_with),
+                "{repository_name}": repository_name,
+            },
+        )
 
         rctx.template(
             "{}/BUILD.bazel".format(clang_directory),
@@ -183,7 +194,6 @@ def _hermetic_android_ndk_platform_repository_impl(rctx):
 
     rctx.file("ndk/.keep", "")
     rctx.symlink(rctx.path("sources"), "ndk/sources")
-    rctx.symlink(Label("//ndk:BUILD.androidndk.bazel"), "BUILD.bazel")
     rctx.template(
         "target_systems.bzl",
         rctx.attr._template_target_systems,
@@ -210,6 +220,10 @@ hermetic_android_ndk_platform_repository = repository_rule(
         ),
         "_template_ndk_clang": attr.label(
             default = Label("@rules_android_ndk//:BUILD.ndk_clang.tpl"),
+            allow_single_file = True,
+        ),
+        "_template_ndk_root": attr.label(
+            default = Label("@rules_android_ndk//:BUILD.ndk_root.tpl"),
             allow_single_file = True,
         ),
         "_template_ndk_sysroot": attr.label(

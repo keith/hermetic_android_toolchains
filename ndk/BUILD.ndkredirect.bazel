@@ -27,6 +27,40 @@ package(default_visibility = ["//visibility:public"])
 ]
 
 [
+    toolchain(
+        name = "dynamic_cc_runtimes_toolchain_{}_{}".format(platform_name, target_system_name),
+        exec_compatible_with = exec_compatible_with,
+        target_compatible_with = [
+            "@platforms//os:android",
+            CPU_CONSTRAINT[target_system_name],
+        ],
+        target_settings = ["@rules_android_ndk//:use_shared_libcpp_enabled"],
+        toolchain = "@androidndk_{}//:dynamic_cc_runtime_{}".format(platform, target_system_name),
+        toolchain_type = "@bazel_tools//tools/cpp:cc_runtimes_toolchain_type",
+    )
+    for platform in sorted(ANDROID_PLATFORMS.keys())
+    for platform_name, exec_compatible_with in ANDROID_PLATFORMS[platform]["constraints"]
+    for target_system_name in TARGET_SYSTEM_NAMES
+]
+
+[
+    toolchain(
+        name = "static_cc_runtimes_toolchain_{}_{}".format(platform_name, target_system_name),
+        exec_compatible_with = exec_compatible_with,
+        target_compatible_with = [
+            "@platforms//os:android",
+            CPU_CONSTRAINT[target_system_name],
+        ],
+        target_settings = ["@rules_android_ndk//:use_shared_libcpp_disabled"],
+        toolchain = "@androidndk_{}//:static_cc_runtime_{}".format(platform, target_system_name),
+        toolchain_type = "@bazel_tools//tools/cpp:cc_runtimes_toolchain_type",
+    )
+    for platform in sorted(ANDROID_PLATFORMS.keys())
+    for platform_name, exec_compatible_with in ANDROID_PLATFORMS[platform]["constraints"]
+    for target_system_name in TARGET_SYSTEM_NAMES
+]
+
+[
     ndk_exports_toolchain(
         name = "exports_{}".format(platform_name),
         android_native_app_glue_header = "@androidndk_{}//:sources/android/native_app_glue/android_native_app_glue.h".format(platform),
