@@ -183,7 +183,11 @@ def _hermetic_android_ndk_platform_repository_impl(rctx):
 
     rctx.file("ndk/.keep", "")
     rctx.symlink(rctx.path("sources"), "ndk/sources")
-    rctx.symlink(Label("//ndk:BUILD.androidndk.bazel"), "BUILD.bazel")
+    rctx.template(
+        "BUILD.bazel",
+        Label("//ndk:BUILD.androidndk.bazel"),
+        {"{clang_directory}": _PLATFORMS[rctx.attr.platform]["clang_directory"]},
+    )
     rctx.template(
         "target_systems.bzl",
         rctx.attr._template_target_systems,

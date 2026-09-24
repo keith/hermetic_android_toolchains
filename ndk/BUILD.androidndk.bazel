@@ -11,6 +11,18 @@ exports_files([
     "sources/android/native_app_glue/android_native_app_glue.h",
 ])
 
+# A single source file whose physical parent is the complete downloaded NDK.
+filegroup(
+    name = "ndk_root",
+    srcs = ["source.properties"],
+)
+
+# glob does not cross the clang and sysroot package boundaries.
+filegroup(
+    name = "all_files",
+    srcs = glob(["**/*"]) + ["//{clang_directory}:all_files"],
+)
+
 cc_library(
     name = "cpufeatures",
     srcs = glob(["sources/android/cpufeatures/*.c"]),

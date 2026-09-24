@@ -5,6 +5,12 @@ load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 
 package(default_visibility = ["//visibility:public"])
 
+# Resolve this file's physical parent to obtain a standard Android SDK layout.
+filegroup(
+    name = "sdk_root",
+    srcs = ["sdk/.root"],
+)
+
 %{platform_rules}
 
 %{platform_aliases}

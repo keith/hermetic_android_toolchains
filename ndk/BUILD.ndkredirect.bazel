@@ -6,6 +6,22 @@ load("//:target_systems.bzl", "CPU_CONSTRAINT", "TARGET_SYSTEM_NAMES")
 
 package(default_visibility = ["//visibility:public"])
 
+# Select the installation for the consumer's platform. Local path exporters
+# should request these labels in the host configuration.
+[
+    alias(
+        name = name,
+        actual = select({
+            "@hermetic_android_toolchains//:platform_{}".format(platform): "@androidndk_{}//:{}".format(platform, name)
+            for platform in ANDROID_PLATFORMS
+        }),
+    )
+    for name in [
+        "all_files",
+        "ndk_root",
+    ]
+]
+
 [
     toolchain(
         name = "toolchain_{}_{}".format(platform_name, target_system_name),

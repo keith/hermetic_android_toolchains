@@ -61,6 +61,7 @@ _SDK_PLATFORM_SPECIFIC_TARGETS = [
     "build_tools_libs",
     "dexdump",
     "files",
+    "sdk_root",
     "platform-tools/adb",
     "zipalign",
     "zipalign_binary",
@@ -86,6 +87,8 @@ _SDK_HUB_TARGETS = [
 build_test(
     name = "valid_labels_build_test",
     targets = [
+        "@androidndk//:ndk_root",
+        "@androidndk//:all_files",
         "@androidsdk//:emulator_images_android_24_arm",
         "@androidsdk//:emulator_images_android_28_arm64-v8a",
         "@androidsdk//:emulator_images_android_28_arm64-v8a_qemu2_extra",

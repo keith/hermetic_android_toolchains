@@ -101,6 +101,7 @@ def _android_impl(module_ctx):
         name = "androidsdk_{}".format(platform)
         hermetic_android_sdk_platform_repository(
             name = name,
+            shared_root = "@androidsdk//:.sdk-root",
             platform = platform,
             **kwargs
         )

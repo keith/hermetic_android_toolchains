@@ -700,6 +700,7 @@ def _platform_redirect_aliases(rctx, sdk):
         _platform_redirect_alias(rctx, sdk, "build_tools_libs"),
         _platform_redirect_alias(rctx, sdk, "dexdump"),
         _platform_redirect_alias(rctx, sdk, "files"),
+        _platform_redirect_alias(rctx, sdk, "sdk_root"),
         _platform_redirect_alias(rctx, sdk, "main_dex_classes"),
         _platform_redirect_alias(rctx, sdk, "zipalign"),
         _platform_redirect_alias(rctx, sdk, "zipalign_binary"),
@@ -828,6 +829,20 @@ def _write_runner_scripts(rctx, sdk):
                 executable = True,
             )
 
+def _write_sdk_layout(rctx, emulator):
+    # Gradle and other SDK consumers expect build-tools/<version>, without the
+    # extra host-platform directory used by the Bazel tool labels.
+    platform = rctx.attr.platform
+    shared_root = rctx.path(rctx.attr.shared_root).dirname
+    rctx.file("sdk/.root", "")
+    rctx.symlink(shared_root.get_child("platforms"), "sdk/platforms")
+    rctx.symlink(rctx.path("build-tools/{}".format(platform)), "sdk/build-tools")
+    rctx.symlink(rctx.path("platform-tools/{}".format(platform)), "sdk/platform-tools")
+    if emulator:
+        rctx.symlink(rctx.path("emulator"), "sdk/emulator")
+    if rctx.attr.system_images:
+        rctx.symlink(shared_root.get_child("system-images"), "sdk/system-images")
+
 def _hermetic_android_sdk_platform_repository_impl(rctx):
     if not rctx.attr.version:
         fail("hermetic_android_sdk_platform_repository requires version.")
@@ -840,6 +855,7 @@ def _hermetic_android_sdk_platform_repository_impl(rctx):
     _download_sdk_platform_tools(rctx, sdk)
     _download_emulator(rctx, emulator)
     _write_runner_scripts(rctx, sdk)
+    _write_sdk_layout(rctx, emulator)
 
     rctx.template(
         "BUILD.bazel",
@@ -872,6 +888,7 @@ hermetic_android_sdk_platform_repository = repository_rule(
         "platforms_url": attr.string(),
         "system_images": attr.string_list(),
         "platform": attr.string(mandatory = True, values = sorted(ANDROID_PLATFORMS.keys())),
+        "shared_root": attr.label(mandatory = True, allow_single_file = True),
         "version": attr.string(mandatory = True),
         "_versions_json": attr.label(
             default = Label("//sdk:versions.json"),
@@ -880,6 +897,52 @@ hermetic_android_sdk_platform_repository = repository_rule(
     },
     environ = [ANDROID_SDK_LICENSE_ENV],
 )
+
+def _xml_escape(value):
+    return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;").replace("'", "&apos;")
+
+def _write_platform_package_metadata(rctx, sdk):
+    directory = "platforms/android-{}".format(sdk["api_level"])
+    if rctx.path(directory + "/package.xml").exists:
+        return
+    properties = {}
+    for line in rctx.read(directory + "/source.properties").splitlines():
+        key, separator, value = line.partition("=")
+        if separator:
+            properties[key.strip()] = value.strip()
+    revision = properties["Pkg.Revision"].split(".")
+    revision_xml = "".join([
+        "<{0}>{1}</{0}>".format(part, int(value))
+        for part, value in zip(["major", "minor", "micro"], revision)
+    ])
+    details = ["<api-level>{}</api-level>".format(_xml_escape(properties["AndroidVersion.ApiLevel"]))]
+    if properties.get("AndroidVersion.CodeName"):
+        details.append("<codename>{}</codename>".format(_xml_escape(properties["AndroidVersion.CodeName"])))
+    if properties.get("AndroidVersion.ExtensionLevel"):
+        details.append("<extension-level>{}</extension-level>".format(int(properties["AndroidVersion.ExtensionLevel"])))
+    details.extend([
+        "<base-extension>{}</base-extension>".format(properties.get("AndroidVersion.IsBaseSdk", "true")),
+        '<layoutlib api="{}"/>'.format(int(properties.get("Layoutlib.Api", "0"))),
+    ])
+
+    # SDK Manager normally writes this after extraction. AGP's legacy parser
+    # cannot discover platforms whose source.properties API level is decimal.
+    rctx.file(directory + "/package.xml", """<?xml version="1.0" encoding="UTF-8"?>
+<repository xmlns="http://schemas.android.com/repository/android/common/02"
+    xmlns:sdk="http://schemas.android.com/sdk/android/repo/repository2/03"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <localPackage xmlns="" path="{path}" obsolete="false">
+        <type-details xsi:type="sdk:platformDetailsType">{details}</type-details>
+        <revision>{revision}</revision>
+        <display-name>{description}</display-name>
+    </localPackage>
+</repository>
+""".format(
+        path = _xml_escape(directory.replace("/", ";")),
+        details = "".join(details),
+        revision = revision_xml,
+        description = _xml_escape(properties["Pkg.Desc"]),
+    ))
 
 def _hermetic_android_sdk_repository_impl(rctx):
     if not rctx.attr.version:
@@ -901,6 +964,8 @@ def _hermetic_android_sdk_repository_impl(rctx):
         strip_prefix = sdk["platforms_strip_prefix"],
     )
 
+    _write_platform_package_metadata(rctx, sdk)
+    rctx.file(".sdk-root", "")
     rctx.symlink(Label("@rules_android//rules/android_sdk_repository:helper.bzl"), "helper.bzl")
     rctx.template(
         "BUILD.bazel",
