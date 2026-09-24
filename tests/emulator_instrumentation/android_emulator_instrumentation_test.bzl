@@ -37,9 +37,7 @@ def _android_emulator_instrumentation_test_impl(ctx):
         instrumentation_apk.signed_apk,
         system_image_source_properties,
     ]
-    runfiles.extend(ctx.files._emulator_shared_libs)
-    runfiles.extend(ctx.files._emulator_x86_bios)
-    runfiles.extend(ctx.files._qemu2)
+    runfiles.extend(ctx.files._emulator_runtime)
     runfiles.extend(ctx.files.system_image)
     runfiles.extend(ctx.files.system_image_qemu2_extra)
     if test_host_apk:
@@ -113,15 +111,10 @@ android_emulator_instrumentation_test = rule(
             default = "@androidsdk//:emulator",
             executable = True,
         ),
-        "_emulator_shared_libs": attr.label(
+        "_emulator_runtime": attr.label(
             allow_files = True,
             cfg = "exec",
-            default = "@androidsdk//:emulator_shared_libs",
-        ),
-        "_emulator_x86_bios": attr.label(
-            allow_files = True,
-            cfg = "exec",
-            default = "@androidsdk//:emulator_x86_bios",
+            default = "@androidsdk//:emulator_runtime",
         ),
         "_instrumentation_test_template": attr.label(
             allow_single_file = True,
@@ -132,11 +125,6 @@ android_emulator_instrumentation_test = rule(
             cfg = "exec",
             default = "@androidsdk//:mksd",
             executable = True,
-        ),
-        "_qemu2": attr.label(
-            allow_files = True,
-            cfg = "exec",
-            default = "@androidsdk//:qemu2",
         ),
     },
     test = True,

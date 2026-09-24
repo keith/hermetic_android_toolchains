@@ -580,6 +580,13 @@ def _platform_emulator_aliases(emulator):
             tags = ["manual"],
         ))
     blocks.extend([
+        # Include feature defaults, helper binaries, resources and shared libraries.
+        # Local SDK symlinks can hide undeclared runtime inputs that remote execution lacks.
+        _glob_filegroup(
+            "emulator_runtime",
+            ["emulator/**"],
+            tags = ["manual"],
+        ),
         _plain_alias(
             "mksd",
             _emulator_tool_label(platform, "mksdcard"),
@@ -706,6 +713,7 @@ def _emulator_redirect_aliases(rctx, emulator):
         _platform_redirect_alias_for_platforms(rctx, emulator["platforms"], "emulator"),
         _platform_redirect_alias_for_platforms(rctx, emulator["platforms"], "emulator_arm"),
         _platform_redirect_alias_for_platforms(rctx, emulator["platforms"], "emulator_x86"),
+        _platform_redirect_alias_for_platforms(rctx, emulator["platforms"], "emulator_runtime"),
         _platform_redirect_alias_for_platforms(rctx, emulator["platforms"], "emulator_shared_libs"),
         _platform_redirect_alias_for_platforms(rctx, emulator["platforms"], "emulator_x86_bios"),
         _platform_redirect_alias_for_platforms(rctx, emulator["platforms"], "mksd"),

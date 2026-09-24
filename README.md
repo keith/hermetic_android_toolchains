@@ -72,6 +72,7 @@ labels mirroring what `rules_android` does such as:
 ```
 @androidsdk//:platform-tools/adb
 @androidsdk//:emulator
+@androidsdk//:emulator_runtime  # Complete runtime, including feature defaults and helper tools
 @androidsdk//:emulator_shared_libs
 @androidsdk//:emulator_x86_bios
 @androidsdk//:mksd
