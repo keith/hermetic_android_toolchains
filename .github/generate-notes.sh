@@ -9,7 +9,7 @@ cat <<EOF
 
 \`\`\`starlark
 bazel_dep(name = "hermetic_android_toolchains", version = "$new_version", dev_dependency = True)
-bazel_dep(name = "rules_android", version = "0.7.3", dev_dependency = True)
+bazel_dep(name = "rules_android", version = "0.8.0", dev_dependency = True)
 bazel_dep(name = "rules_android_ndk", version = "0.1.5", dev_dependency = True)
 
 android = use_extension("@hermetic_android_toolchains//:extensions.bzl", "android", dev_dependency = True)
