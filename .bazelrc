@@ -1,6 +1,7 @@
 common --enable_platform_specific_config
 
 common --check_direct_dependencies=off
+common --module_mirrors=https://bcr.cloudflaremirrors.com
 
 common --java_language_version=17
 common --java_runtime_version=17
