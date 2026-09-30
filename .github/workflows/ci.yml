@@ -32,7 +32,7 @@ jobs:
     name: Bazel lowest supported version (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     env:
-      USE_BAZEL_VERSION: "8.4.2"
+      USE_BAZEL_VERSION: "8.5.0"
     strategy:
       fail-fast: false
       matrix:
@@ -267,7 +267,7 @@ jobs:
           BAZEL_ROLLING_RESULT: ${{ needs.bazel_rolling.result }}
         run: |
           echo "pre-commit: ${PRE_COMMIT_RESULT}"
-          echo "Bazel 8.4.2: ${BAZEL_LOWEST_SUPPORTED_RESULT}"
+          echo "Bazel 8.5.0: ${BAZEL_LOWEST_SUPPORTED_RESULT}"
           echo "Bazel 8.x: ${BAZEL_8_RESULT}"
           echo "Bazel 9.x: ${BAZEL_9_RESULT}"
           echo "SDK-only example: ${SDK_ONLY_EXAMPLE_RESULT}"
