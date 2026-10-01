@@ -120,6 +120,25 @@
             "strip_prefix": "emulator"
           }
         }
+      },
+      "37.2.12": {
+        "archives": {
+          "darwin": {
+            "file": "emulator-darwin_aarch64-16428233.zip",
+            "sha256": "f4c4a142bda54fcec064bdb32b51f19e25bae0a45ad019197ef968bf7a48979b",
+            "strip_prefix": "emulator"
+          },
+          "linux": {
+            "file": "emulator-linux_x64-16428233.zip",
+            "sha256": "b08fc43d8608d2955f607f1b287beb525041e730086bdca3af152accac3af9c1",
+            "strip_prefix": "emulator"
+          },
+          "windows": {
+            "file": "emulator-windows_x64-16428233.zip",
+            "sha256": "3b524b6e0f1f5506d3d81af62ec9ce15b2a6f80f467e99574e167514ca181401",
+            "strip_prefix": "emulator"
+          }
+        }
       }
     },
     "platform_tools": {
