@@ -209,7 +209,7 @@ jobs:
 
       - name: Test
         shell: bash
-        run: bazel build --config=buildbuddy-remote-exec-ci --remote_header=x-buildbuddy-api-key=${BUILDBUDDY_API_KEY?} //examples/basic_app/java/com/example/hermetic:app
+        run: bazel build --config=buildbuddy-remote-exec-ci --remote_header=x-buildbuddy-api-key=${BUILDBUDDY_API_KEY:?BUILDBUDDY_API_KEY must be set} //examples/basic_app/java/com/example/hermetic:app
 
   bazel_rolling:
     name: Bazel rolling (${{ matrix.os }})
