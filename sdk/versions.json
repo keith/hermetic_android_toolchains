@@ -336,6 +336,16 @@
         "file": "sys-img/android/x86_64-36_r02.zip",
         "sha256": "e1b9d9fb665001ef27b16e57d8762a2d54aec6bff617e17506edb8676667b9da",
         "strip_prefix": "x86_64"
+      },
+      "android-37.0/default/arm64-v8a": {
+        "file": "sys-img/android/arm64-v8a-37.0_r06.zip",
+        "sha256": "ffccd67f6e26b1f4911854ba4e8510b2990ab6c71af33f71864d38bf5d80c57e",
+        "strip_prefix": "arm64-v8a"
+      },
+      "android-37.0/default/x86_64": {
+        "file": "sys-img/android/x86_64-37.0_r06.zip",
+        "sha256": "a80ad9f0f8b487df146df1c1412ee4744ba95dde471b601843b8039616be28d2",
+        "strip_prefix": "x86_64"
       }
     }
   },
