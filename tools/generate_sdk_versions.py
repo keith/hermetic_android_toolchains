@@ -14,6 +14,7 @@ import zipfile
 
 _ROOT = Path(__file__).resolve().parents[1]
 _OUTPUT = _ROOT / "sdk" / "versions.json"
+_LICENSE_OUTPUT = _ROOT / "sdk" / "android-sdk-license"
 _BASE_URL = "https://dl.google.com/android/repository/"
 _REPOSITORY_URL = _BASE_URL + "repository2-3.xml"
 _SYSTEM_IMAGES_REPOSITORY_URL = _BASE_URL + "sys-img/android/sys-img2-3.xml"
@@ -383,11 +384,28 @@ def _generate():
     )
 
 
+def _generate_license_hashes():
+    root = _fetch_xml(_REPOSITORY_URL)
+    license_text = root.find("license[@id='android-sdk-license']")
+    if license_text is None or not license_text.text:
+        raise ValueError("manifest does not define android-sdk-license")
+
+    hashes = set()
+    if _LICENSE_OUTPUT.exists():
+        hashes.update(_LICENSE_OUTPUT.read_text().splitlines())
+
+    # SDK Manager hashes the UTF-8 XML string verbatim, including whitespace.
+    hashes.add(hashlib.sha1(license_text.text.encode("utf-8")).hexdigest())
+    return "\n".join(sorted(hashes)) + "\n"
+
+
 def _main():
     versions = _generate()
     with _OUTPUT.open("w") as f:
         json.dump(versions, f, indent=2)
         f.write("\n")
+
+    _LICENSE_OUTPUT.write_text(_generate_license_hashes())
 
 
 if __name__ == "__main__":

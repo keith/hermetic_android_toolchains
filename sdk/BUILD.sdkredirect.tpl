@@ -21,6 +21,11 @@ exports_files([
 
 toolchain_type(name = "sdk_toolchain_type")
 
+filegroup(
+    name = "licenses",
+    srcs = ["licenses/android-sdk-license"],
+)
+
 config_feature_flag(
     name = "true",
     allowed_values = [

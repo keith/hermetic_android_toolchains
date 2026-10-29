@@ -2,8 +2,12 @@
 """Tests that version metadata updates are additive."""
 
 import copy
+import hashlib
+from pathlib import Path
+import tempfile
 import unittest
 from unittest import mock
+import xml.etree.ElementTree as ET
 
 from tools import generate_ndk_versions
 from tools import generate_sdk_versions
@@ -22,6 +26,47 @@ def _archives(prefix, *, sha1=None):
 
 
 class GenerateSdkVersionsTest(unittest.TestCase):
+    def test_license_hash_preserves_whitespace_and_historical_hashes(self):
+        text = "Terms and Conditions\n\n  License text.\n"
+        manifest = ET.fromstring(
+            '<repository><license id="android-sdk-license">'
+            + text
+            + "</license></repository>"
+        )
+        old_hash = "24333f8a63b6825ea9c5514f83c2829b004d1fee"
+        expected_hash = hashlib.sha1(text.encode("utf-8")).hexdigest()
+
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "android-sdk-license"
+            output.write_text(old_hash + "\n")
+            with (
+                mock.patch.object(generate_sdk_versions, "_LICENSE_OUTPUT", output),
+                mock.patch.object(
+                    generate_sdk_versions, "_fetch_xml", return_value=manifest
+                ),
+            ):
+                actual = generate_sdk_versions._generate_license_hashes()
+                output.write_text(actual)
+                self.assertEqual(
+                    actual, generate_sdk_versions._generate_license_hashes()
+                )
+
+        self.assertEqual(set(actual.splitlines()), {old_hash, expected_hash})
+        self.assertNotIn(
+            hashlib.sha1(text.strip().encode("utf-8")).hexdigest(), actual
+        )
+
+    def test_missing_sdk_license_is_rejected(self):
+        with mock.patch.object(
+            generate_sdk_versions,
+            "_fetch_xml",
+            return_value=ET.fromstring("<repository/>"),
+        ):
+            with self.assertRaisesRegex(
+                ValueError, "does not define android-sdk-license"
+            ):
+                generate_sdk_versions._generate_license_hashes()
+
     def test_generate_preserves_existing_values_and_adds_new_values(self):
         existing = {
             "components": {
