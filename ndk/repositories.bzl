@@ -86,6 +86,7 @@ def _resolve_ndk(rctx):
     custom_archives = rctx.attr.urls or rctx.attr.sha256s or rctx.attr.strip_prefix
     versions = versions_json["versions"]
     aliases = versions_json.get("aliases", {})
+    version = rctx.attr.version
     if custom_archives:
         ndk = _custom_archives(rctx)
     elif rctx.attr.version in versions or rctx.attr.version in aliases:
@@ -104,6 +105,7 @@ def _resolve_ndk(rctx):
     else:
         fail("Unknown Android NDK version {}. Set custom urls, sha256s, and strip_prefix.".format(repr(rctx.attr.version)))
     ndk["api_level"] = api_level
+    ndk["version"] = version
     return ndk
 
 def _download_ndk(rctx, ndk):
@@ -181,6 +183,7 @@ def _hermetic_android_ndk_platform_repository_impl(rctx):
     ndk = _ndk_for_platform(_resolve_ndk(rctx), rctx.attr.platform)
     _download_ndk(rctx, ndk)
 
+    rctx.file("defs.bzl", "NDK_VERSION = {}\n".format(repr(ndk["version"])))
     rctx.file("ndk/.keep", "")
     rctx.symlink(rctx.path("sources"), "ndk/sources")
     rctx.template(

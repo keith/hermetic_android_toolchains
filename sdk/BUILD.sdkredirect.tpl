@@ -19,6 +19,19 @@ exports_files([
     "platforms/android-%{api_level}/framework.aidl",
 ])
 
+# Exposes downloaded target-independent payloads separately from toolchain rules.
+filegroup(
+    name = "platform_files",
+    srcs = glob(["platforms/**"], allow_empty = True),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "system_image_files",
+    srcs = glob(["system-images/**"], allow_empty = True),
+    visibility = ["//visibility:public"],
+)
+
 toolchain_type(name = "sdk_toolchain_type")
 
 config_feature_flag(
