@@ -25,6 +25,7 @@ _MIN_API = 24  # Chosen at random
 
 _PLATFORM_RE = re.compile(r"^platforms;android-(\d+(?:\.\d+)?)$")
 _BUILD_TOOLS_RE = re.compile(r"^build-tools;(\d+(?:\.\d+)*)$")
+_CMAKE_RE = re.compile(r"^cmake;(\d+(?:\.\d+)*)$")
 _FINAL_RE = re.compile(r"^\d+(?:\.\d+)*$")
 _SYSTEM_IMAGE_RE = re.compile(
     r"^system-images;android-(\d+(?:\.\d+)?);([^;]+);([^;]+)$"
@@ -339,6 +340,7 @@ def _generate():
 
     platforms = _matching_versions(repo, _PLATFORM_RE, _MIN_API)
     build_tools = _matching_versions(repo, _BUILD_TOOLS_RE, _MIN_API)
+    cmake = _matching_versions(repo, _CMAKE_RE, 0)
 
     build_tools_version = max(build_tools, key=_version_key)
     platform_tools_pkg = repo["platform-tools"]
@@ -356,6 +358,10 @@ def _generate():
             repo_by_path.get("emulator", []),
             metadata,
         ),
+        "cmake": {
+            version: {"archives": _platform_archives_json(pkg, metadata)}
+            for version, pkg in cmake.items()
+        },
         "platform_tools": {
             platform_tools_version: {
                 "archives": _platform_archives_json(platform_tools_pkg, metadata),

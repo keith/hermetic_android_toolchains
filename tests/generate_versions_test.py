@@ -26,6 +26,7 @@ class GenerateSdkVersionsTest(unittest.TestCase):
         existing = {
             "components": {
                 "build_tools": {"38.0.0": {"existing": "build-tools"}},
+                "cmake": {"3.22.1": {"existing": "cmake"}},
                 "emulator": {"2.0.0": {"existing": "emulator"}},
                 "platform_tools": {"1.0.0": {"existing": "platform-tools"}},
                 "system_images": {"old/image": {"existing": "system-image"}},
@@ -38,6 +39,16 @@ class GenerateSdkVersionsTest(unittest.TestCase):
             },
         }
         repo_packages = [
+            {
+                "path": "cmake;3.31.6",
+                "revision": (3, 31, 6, 0),
+                "archives": _archives("cmake-3.31.6"),
+            },
+            {
+                "path": "cmake;4.0.0",
+                "revision": (4, 0, 0, 0),
+                "archives": _archives("cmake-4"),
+            },
             {
                 "path": "platforms;android-24",
                 "revision": (24, 0, 1, 0),
@@ -128,6 +139,12 @@ class GenerateSdkVersionsTest(unittest.TestCase):
         )
         self.assertEqual(actual["versions"]["24"], existing["versions"]["24"])
         self.assertIn("3.0.0", actual["components"]["emulator"])
+        self.assertEqual(
+            actual["components"]["cmake"]["3.22.1"],
+            existing["components"]["cmake"]["3.22.1"],
+        )
+        self.assertIn("3.31.6", actual["components"]["cmake"])
+        self.assertIn("4.0.0", actual["components"]["cmake"])
         self.assertIn("2.0.0", actual["components"]["platform_tools"])
         self.assertIn("25", actual["versions"])
 

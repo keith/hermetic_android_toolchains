@@ -81,6 +81,22 @@ labels mirroring what `rules_android` does such as:
 @androidsdk//:emulator_images_android_28_arm64-v8a_qemu2_extra  # Version / arch dependent
 ```
 
+## Downloading CMake
+
+To download CMake and Ninja, add this to your `MODULE.bazel`:
+
+```bzl
+android.cmake(version = "3.22.1")
+```
+
+The tools and runtime files are exposed through:
+
+```
+@androidsdk//:cmake
+@androidsdk//:ninja
+@androidsdk//:cmake_files
+```
+
 ## Specifying versions
 
 This repo includes metadata for many Android SDK and NDK versions so you

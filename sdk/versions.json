@@ -347,6 +347,280 @@
         "sha256": "a80ad9f0f8b487df146df1c1412ee4744ba95dde471b601843b8039616be28d2",
         "strip_prefix": "x86_64"
       }
+    },
+    "cmake": {
+      "3.6.4111459": {
+        "archives": {
+          "darwin": {
+            "file": "cmake-3.6.4111459-darwin-aarch64.zip",
+            "sha256": "28f77c0bafe577f98447bfd0495978c9befbf132997f38c461e8df692a11a790"
+          },
+          "linux": {
+            "file": "cmake-3.6.4111459-linux-x86_64.zip",
+            "sha256": "993527d8092bf6895e52b2b1ea7d66749714d907ce2ebce4fc6dd3f1df076cbb"
+          },
+          "windows": {
+            "file": "cmake-3.6.4111459-windows-x86_64.zip",
+            "sha256": "d1a13b0339c88fe355aebd14c4515b837dc8090a0ab3960206f1a8b564bdad49"
+          }
+        }
+      },
+      "3.10.2.4988404": {
+        "archives": {
+          "darwin": {
+            "file": "cmake-3.10.2-darwin-aarch64.zip",
+            "sha256": "64315c82dd19b64570129793e1b632efcc67d656f2558e9e74aeb911ac5d93cc"
+          },
+          "linux": {
+            "file": "cmake-3.10.2-linux-x86_64.zip",
+            "sha256": "763572c87f77d3ddbf7e72d080e8b45184d5c368bfdd170f2589f08a089570fd"
+          },
+          "windows": {
+            "file": "cmake-3.10.2-windows-x86_64.zip",
+            "sha256": "2f100c440ba682fdaa942ac8b3b489cab0c4faf0d886786490ec39df266b6930"
+          }
+        }
+      },
+      "3.18.1": {
+        "archives": {
+          "darwin": {
+            "file": "ba34c321f92f6e6fd696c8354c262c122f56abf8.cmake-3.18.1-darwin.zip",
+            "sha256": "b15d6d7ab5615a48bb14962f5a931be6cd9a0c187f4bd6be404bdd46a7bef60b"
+          },
+          "linux": {
+            "file": "cmake-3.18.1-linux.zip",
+            "sha256": "1f42f35cdcab51a7152fc644772eb988a0c197526cbec1c37c1a8146e240012a"
+          },
+          "windows": {
+            "file": "7c386a739f915f5bd60051f2572c24782388e807.cmake-3.18.1-windows.zip",
+            "sha256": "aa75d42e8d6c869d53b129fc42c5391bbba86593ea722b15ae0c38085213bbe7"
+          }
+        }
+      },
+      "3.22.1": {
+        "archives": {
+          "darwin": {
+            "file": "cmake-3.22.1-darwin.zip",
+            "sha256": "c25d4072e70bbae1bfb0483a85c9237e4c7ceebfd67fe77bbe87d79571f0394f"
+          },
+          "linux": {
+            "file": "cmake-3.22.1-linux.zip",
+            "sha256": "9196644852a978012caf7a4067ba1898debf6cc204c3341562771e31080d6869"
+          },
+          "windows": {
+            "file": "cmake-3.22.1-windows.zip",
+            "sha256": "c9a9d568452a20cf27d703cb21ef9529dd67bda6be048c4d4b884acb3ac3a2b8"
+          }
+        }
+      },
+      "3.30.3": {
+        "archives": {
+          "darwin": {
+            "file": "cmake-3.30.3-darwin.zip",
+            "sha256": "57024d590691b9d66977d2f66786f10971549441b33b7830d3d2b659f80b93ea"
+          },
+          "linux": {
+            "file": "cmake-3.30.3-linux.zip",
+            "sha256": "8cf0dc4f7ce0173d13ed71066fb6861a79c73545df71d12ca3e933430f268d50"
+          },
+          "windows": {
+            "file": "cmake-3.30.3-windows.zip",
+            "sha256": "026982dba2dbd2de4a530cf1300ffad05f6bc7d372d9df83d46112fe017e0c6b"
+          }
+        }
+      },
+      "3.30.4": {
+        "archives": {
+          "darwin": {
+            "file": "cmake-3.30.4-darwin.zip",
+            "sha256": "4c83eb9ad972c1d54050eff227dd21cee7ea35dd99fbb1183e8daa4d554f7e5a"
+          },
+          "linux": {
+            "file": "cmake-3.30.4-linux.zip",
+            "sha256": "13bec9c5fa3e5fb85b2c3c4e4d82afbff020f39e7cb699c237a1a6521641bdb4"
+          },
+          "windows": {
+            "file": "cmake-3.30.4-windows.zip",
+            "sha256": "9496bc0f04c5ee3dd61e3c831d3b8720acddb497dbe6b602eb88a6c8d65161c6"
+          }
+        }
+      },
+      "3.30.5": {
+        "archives": {
+          "darwin": {
+            "file": "cmake-3.30.5-darwin.zip",
+            "sha256": "1e0c4ef884ba8a6dec257e0a33fa63a9af9474a6d8ef7156f90350535c2f0b13"
+          },
+          "linux": {
+            "file": "cmake-3.30.5-linux.zip",
+            "sha256": "f225225f5c83afa456c00b4a4c50369ec618db45f09bef53906c5ff321063356"
+          },
+          "windows": {
+            "file": "cmake-3.30.5-windows.zip",
+            "sha256": "9011d015cd194f6d26cf779ce3bb2e656390fc9bbc592c7303279585dc239a8e"
+          }
+        }
+      },
+      "3.31.0": {
+        "archives": {
+          "darwin": {
+            "file": "cmake-3.31.0-darwin.zip",
+            "sha256": "4e24f6841bbdef28e6d756bd92a2e61e24031101092d76b68ca2ea61708b3953"
+          },
+          "linux": {
+            "file": "cmake-3.31.0-linux.zip",
+            "sha256": "1be72ad8a23b74fd058ca720fefde47b784a5a265983d6e790dd98531366a396"
+          },
+          "windows": {
+            "file": "cmake-3.31.0-windows.zip",
+            "sha256": "c5c996613889d5362565d1dfff24cee9f739be5d7f53ad97b692f0ae4fb5e694"
+          }
+        }
+      },
+      "3.31.1": {
+        "archives": {
+          "darwin": {
+            "file": "cmake-3.31.1-darwin.zip",
+            "sha256": "ebcd89047554a46592914e6e2103317f81a4f8b010cb9eec06e0a8945e9be034"
+          },
+          "linux": {
+            "file": "cmake-3.31.1-linux.zip",
+            "sha256": "1659b7a6c81cb519e570746626040080b45c97761664d04c364b081209c90480"
+          },
+          "windows": {
+            "file": "cmake-3.31.1-windows.zip",
+            "sha256": "1e289e5c1707cd3b0e6e845b205ca4dbbfc370d5787058d21ec40adbd9950979"
+          }
+        }
+      },
+      "3.31.4": {
+        "archives": {
+          "darwin": {
+            "file": "cmake-3.31.4-darwin.zip",
+            "sha256": "4321abce8270d8de9beb859c956a9f5cec5e61a8b775ee08600c43f96f4b5501"
+          },
+          "linux": {
+            "file": "cmake-3.31.4-linux.zip",
+            "sha256": "e6263cbcffc8ab5441ce6c743f57c2e4050fa5a56bd5a3077ff6adba15c00e30"
+          },
+          "windows": {
+            "file": "cmake-3.31.4-windows.zip",
+            "sha256": "982aecc26219a39bb929d82cde1c37bf8b4d5cc41daeb41535c768cc5da1b080"
+          }
+        }
+      },
+      "3.31.5": {
+        "archives": {
+          "darwin": {
+            "file": "cmake-3.31.5-darwin.zip",
+            "sha256": "f6a1f9e93383e04e80ff9c9acf5fac8f2ae35190c261cf63825fb0d88802b2c2"
+          },
+          "linux": {
+            "file": "cmake-3.31.5-linux.zip",
+            "sha256": "8b6fb3c42ffc5294694ee02fffaf2d12cf0793768dea2be40666a272c3e1b63f"
+          },
+          "windows": {
+            "file": "cmake-3.31.5-windows.zip",
+            "sha256": "c6323c19f45c507f8866c96eb035fe70e5eb2a5b9d002e85ddc964e5f8501c58"
+          }
+        }
+      },
+      "3.31.6": {
+        "archives": {
+          "darwin": {
+            "file": "cmake-3.31.6-darwin.zip",
+            "sha256": "861a219b872cd0d9aee282b617fe3bd32f83925db3a0d28fd45d0553452e903a"
+          },
+          "linux": {
+            "file": "cmake-3.31.6-linux.zip",
+            "sha256": "ce136bb4b02580b36e53d9ccfe5275069655e6ef7d46d6fe2fcf88cfdf8fb761"
+          },
+          "windows": {
+            "file": "cmake-3.31.6-windows.zip",
+            "sha256": "dd54cc866afbd2cfc46189dd4864cdfb5bf8e2a34ec56e80188da0a138567b5e"
+          }
+        }
+      },
+      "4.0.2": {
+        "archives": {
+          "darwin": {
+            "file": "cmake-4.0.2-darwin.zip",
+            "sha256": "ac4f147b960bab9f0baa5885c2fd6608c5e2eda202ac9402b5ce6bd927419910"
+          },
+          "linux": {
+            "file": "cmake-4.0.2-linux.zip",
+            "sha256": "91104444800aee3fbb2e007ab47cfdb3dd7e823d32aa04f604108b3cbcfe96ea"
+          },
+          "windows": {
+            "file": "cmake-4.0.2-windows.zip",
+            "sha256": "b15604db51a35fcfa415822325849faa61a597f2fc60e1dacf390e57cf04a0be"
+          }
+        }
+      },
+      "4.0.3": {
+        "archives": {
+          "darwin": {
+            "file": "cmake-4.0.3-darwin.zip",
+            "sha256": "3ab20d8a7594269c4677bbb2643f865bc3a88bdb5032754c68548ebbaa8f1770"
+          },
+          "linux": {
+            "file": "cmake-4.0.3-linux.zip",
+            "sha256": "fe263b616db6d1ffd790f0c1e91af8d60f2004c7ba729491a28738671eac2894"
+          },
+          "windows": {
+            "file": "cmake-4.0.3-windows.zip",
+            "sha256": "e30634714512b104d2343391a5c18cb496033d31da5ccc12d8de8b3e98c84575"
+          }
+        }
+      },
+      "4.1.0": {
+        "archives": {
+          "darwin": {
+            "file": "cmake-4.1.0-darwin.zip",
+            "sha256": "a89cfe48f2e7563d2f3a45caf9b013c89ce91eb2c14096022b84256f23d2f222"
+          },
+          "linux": {
+            "file": "cmake-4.1.0-linux.zip",
+            "sha256": "f5e575581e5953ea27bca945fc3580ab1e8bc1ca85fa8aa899e3b6378f4accf3"
+          },
+          "windows": {
+            "file": "cmake-4.1.0-windows.zip",
+            "sha256": "0d2a0075d2a529477a3b0a26f38e061b328823a8b72e2385a9055e1101fb0c91"
+          }
+        }
+      },
+      "4.1.1": {
+        "archives": {
+          "darwin": {
+            "file": "cmake-4.1.1-darwin.zip",
+            "sha256": "2b49c3a4e788c5f70c55393c79ff794cfbb81c06172c65f3154a9f0376637bd9"
+          },
+          "linux": {
+            "file": "cmake-4.1.1-linux.zip",
+            "sha256": "364c2940ff8a577c2e821831c72975e33be01e4e24c451591d6599b0fbf04dff"
+          },
+          "windows": {
+            "file": "cmake-4.1.1-windows.zip",
+            "sha256": "8024feb61856d6c3dce7acc6653bda9abedca46a0fdeab375cf11db41a28a34b"
+          }
+        }
+      },
+      "4.1.2": {
+        "archives": {
+          "darwin": {
+            "file": "cmake-4.1.2-darwin.zip",
+            "sha256": "130b80221abda282b96e3669cef5dccf0d916e988e08051f5daccdd03360a1ac"
+          },
+          "linux": {
+            "file": "cmake-4.1.2-linux.zip",
+            "sha256": "46bda18f0f3c28a55f88da4ba05fec21abe3d9bca0a78a8b18d444987b3dc817"
+          },
+          "windows": {
+            "file": "cmake-4.1.2-windows.zip",
+            "sha256": "3a78ad82a3f3e9e613e255618d2acf1b3c4bdb24ef6e1f9341227cf6fc492a89"
+          }
+        }
+      }
     }
   },
   "versions": {

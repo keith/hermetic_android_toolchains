@@ -16,3 +16,10 @@ filegroup(
 %{platform_aliases}
 
 %{emulator_aliases}
+
+filegroup(
+    name = "cmake_files",
+    srcs = glob(["cmake/**"], allow_empty = True),
+)
+
+%{cmake_aliases}

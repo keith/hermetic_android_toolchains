@@ -72,6 +72,22 @@ EMULATOR_TAG = tag_class(attrs = {
     ),
 })
 
+CMAKE_TAG = tag_class(attrs = {
+    "version": attr.string(
+        doc = "Android SDK CMake package version to download and inject into @androidsdk.",
+        mandatory = True,
+    ),
+    "urls": attr.string_dict(
+        doc = "Custom CMake archive URLs keyed by supported platforms from linux, darwin, and windows.",
+    ),
+    "sha256s": attr.string_dict(
+        doc = "Custom CMake archive SHA-256 values keyed by the same platforms as urls.",
+    ),
+    "strip_prefixes": attr.string_dict(
+        doc = "Custom CMake archive strip prefixes keyed by the same platforms as urls.",
+    ),
+})
+
 SYSTEM_IMAGE_TAG = tag_class(attrs = {
     "version": attr.string(
         doc = "Known Android default system image version to download and inject into @androidsdk, for example 28.",
@@ -254,6 +270,40 @@ def _resolve_emulator(rctx, sdk_platforms, *, require_common_platforms):
         "platforms": platforms,
     }
 
+def _resolve_cmake(rctx, sdk_platforms, *, require_common_platforms):
+    if not rctx.attr.cmake_version:
+        return None
+
+    if rctx.attr.cmake_urls or rctx.attr.cmake_sha256s or rctx.attr.cmake_strip_prefixes:
+        urls, sha256s, strip_prefixes, platforms = _custom_platform_archives(
+            rctx,
+            rctx.attr.cmake_urls,
+            rctx.attr.cmake_sha256s,
+            rctx.attr.cmake_strip_prefixes,
+            "cmake",
+        )
+    else:
+        versions_json = json.decode(rctx.read(rctx.attr._versions_json))
+        versions = versions_json["components"].get("cmake", {})
+        if rctx.attr.cmake_version not in versions:
+            fail("Unknown Android CMake version {}. Add it to sdk/versions.json or set custom archive URLs/SHA-256 values.".format(repr(rctx.attr.cmake_version)))
+        urls, sha256s, strip_prefixes = archive_attrs(versions[rctx.attr.cmake_version]["archives"], include_strip_prefixes = True)
+        platforms = sorted(urls.keys())
+
+    platforms = [platform for platform in sdk_platforms if platform in platforms]
+    if not platforms:
+        if require_common_platforms:
+            fail("Android CMake archives have no platforms in common with resolved Android SDK platforms.")
+        return None
+
+    return {
+        "platforms": platforms,
+        "sha256s": sha256s,
+        "strip_prefixes": strip_prefixes,
+        "urls": urls,
+        "version": rctx.attr.cmake_version,
+    }
+
 def _resolve_sdk(rctx):
     versions_json = json.decode(rctx.read(rctx.attr._versions_json))
     versions = versions_json["versions"]
@@ -310,6 +360,19 @@ def _download_emulator(rctx, emulator):
         sha256 = emulator["emulator_sha256s"][platform],
         output = "emulator",
         strip_prefix = emulator["emulator_strip_prefixes"].get(platform, ""),
+    )
+
+def _download_cmake(rctx, cmake):
+    if not cmake:
+        return
+
+    platform = cmake["platforms"][0]
+    _download_component(
+        rctx,
+        url = cmake["urls"][platform],
+        sha256 = cmake["sha256s"][platform],
+        output = "cmake/{}".format(cmake["version"]),
+        strip_prefix = cmake["strip_prefixes"].get(platform, ""),
     )
 
 def _download_system_images(rctx, system_images):
@@ -686,6 +749,25 @@ def _platform_redirect_alias_for_platforms(rctx, platforms, name):
 def _platform_redirect_alias(rctx, sdk, name):
     return _platform_redirect_alias_for_platforms(rctx, sdk["platforms"], name)
 
+def _cmake_platform_aliases(cmake):
+    if not cmake:
+        return ""
+
+    extension = ANDROID_PLATFORMS[cmake["platforms"][0]]["executable_extension"]
+    return "\n\n".join([
+        _plain_alias(tool, "cmake/{}/bin/{}{}".format(cmake["version"], tool, extension))
+        for tool in ["cmake", "ninja"]
+    ])
+
+def _cmake_redirect_aliases(rctx, cmake):
+    if not cmake:
+        return ""
+
+    return "\n\n".join([
+        _platform_redirect_alias_for_platforms(rctx, cmake["platforms"], name)
+        for name in ["cmake", "cmake_files", "ninja"]
+    ])
+
 def _platform_redirect_aliases(rctx, sdk):
     blocks = [
         _platform_redirect_alias(rctx, sdk, "aapt"),
@@ -829,7 +911,7 @@ def _write_runner_scripts(rctx, sdk):
                 executable = True,
             )
 
-def _write_sdk_layout(rctx, emulator):
+def _write_sdk_layout(rctx, emulator, cmake):
     # Gradle and other SDK consumers expect build-tools/<version>, without the
     # extra host-platform directory used by the Bazel tool labels.
     platform = rctx.attr.platform
@@ -840,6 +922,8 @@ def _write_sdk_layout(rctx, emulator):
     rctx.symlink(rctx.path("platform-tools/{}".format(platform)), "sdk/platform-tools")
     if emulator:
         rctx.symlink(rctx.path("emulator"), "sdk/emulator")
+    if cmake:
+        rctx.symlink(rctx.path("cmake"), "sdk/cmake")
     if rctx.attr.system_images:
         rctx.symlink(shared_root.get_child("system-images"), "sdk/system-images")
 
@@ -852,15 +936,18 @@ def _hermetic_android_sdk_platform_repository_impl(rctx):
     require_license(rctx, ANDROID_SDK_LICENSE_ENV, "SDK")
     sdk = _sdk_for_platform(_resolve_sdk(rctx), rctx.attr.platform)
     emulator = _resolve_emulator(rctx, sdk["platforms"], require_common_platforms = False)
+    cmake = _resolve_cmake(rctx, sdk["platforms"], require_common_platforms = False)
     _download_sdk_platform_tools(rctx, sdk)
     _download_emulator(rctx, emulator)
+    _download_cmake(rctx, cmake)
     _write_runner_scripts(rctx, sdk)
-    _write_sdk_layout(rctx, emulator)
+    _write_sdk_layout(rctx, emulator, cmake)
 
     rctx.template(
         "BUILD.bazel",
         Label("//sdk:BUILD.androidsdk.tpl"),
         substitutions = {
+            "%{cmake_aliases}": _cmake_platform_aliases(cmake),
             "%{emulator_aliases}": _platform_emulator_aliases(emulator),
             "%{platform_aliases}": _platform_aliases(sdk),
             "%{platform_rules}": _platform_rules(sdk),
@@ -880,6 +967,10 @@ hermetic_android_sdk_platform_repository = repository_rule(
         "build_tools_strip_prefixes": attr.string_dict(),
         "build_tools_urls": attr.string_dict(),
         "build_tools_version": attr.string(mandatory = True),
+        "cmake_sha256s": attr.string_dict(),
+        "cmake_strip_prefixes": attr.string_dict(),
+        "cmake_urls": attr.string_dict(),
+        "cmake_version": attr.string(),
         "emulator_version": attr.string(),
         "platform_tools_sha256s": attr.string_dict(),
         "platform_tools_urls": attr.string_dict(),
@@ -953,6 +1044,7 @@ def _hermetic_android_sdk_repository_impl(rctx):
     require_license(rctx, ANDROID_SDK_LICENSE_ENV, "SDK")
     sdk = _resolve_sdk(rctx)
     emulator = _resolve_emulator(rctx, sdk["platforms"], require_common_platforms = True)
+    cmake = _resolve_cmake(rctx, sdk["platforms"], require_common_platforms = True)
     versions_json = json.decode(rctx.read(rctx.attr._versions_json))
     system_images = _resolve_system_images(rctx, versions_json)
     _download_system_images(rctx, system_images)
@@ -974,6 +1066,7 @@ def _hermetic_android_sdk_repository_impl(rctx):
             "%{api_level}": sdk["api_level"],
             "%{build_tools_directory}": sdk["build_tools_directory"],
             "%{build_tools_version}": sdk["build_tools_version"],
+            "%{cmake_aliases}": _cmake_redirect_aliases(rctx, cmake),
             "%{emulator_aliases}": _emulator_redirect_aliases(rctx, emulator),
             "%{platform_aliases}": _platform_redirect_aliases(rctx, sdk),
             "%{platform_rules}": _platform_redirect_rules(sdk),
@@ -995,6 +1088,10 @@ hermetic_android_sdk_repository = repository_rule(
         "build_tools_strip_prefixes": attr.string_dict(),
         "build_tools_urls": attr.string_dict(),
         "build_tools_version": attr.string(mandatory = True),
+        "cmake_sha256s": attr.string_dict(),
+        "cmake_strip_prefixes": attr.string_dict(),
+        "cmake_urls": attr.string_dict(),
+        "cmake_version": attr.string(),
         "emulator_version": attr.string(),
         "platform_repositories": attr.string_dict(mandatory = True),
         "platform_tools_sha256s": attr.string_dict(),
