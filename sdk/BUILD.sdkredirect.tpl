@@ -156,6 +156,8 @@ alias(
 
 %{emulator_aliases}
 
+%{cmake_aliases}
+
 android_sdk(
     name = "sdk",
     aapt = select({

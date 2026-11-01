@@ -11,6 +11,7 @@ load("//private:utils.bzl", "ANDROID_PLATFORMS")
 load(
     "//sdk:repositories.bzl",
     "ANDROID_SDK_LICENSE_ENV",
+    "CMAKE_TAG",
     "EMULATOR_TAG",
     "SDK_TAG",
     "SYSTEM_IMAGE_TAG",
@@ -62,6 +63,19 @@ def _emulator_kwargs(tag):
         return {}
     return {"emulator_version": tag.version}
 
+def _cmake_kwargs(tag):
+    if not tag:
+        return {}
+    if not tag.version:
+        fail("android.cmake(...) requires version.")
+
+    return {
+        "cmake_sha256s": tag.sha256s,
+        "cmake_strip_prefixes": tag.strip_prefixes,
+        "cmake_urls": tag.urls,
+        "cmake_version": tag.version,
+    }
+
 def _system_image_directory(tag):
     version = tag.version
     if not version.startswith("android-"):
@@ -92,8 +106,9 @@ def _ndk_kwargs(tag):
 def _android_impl(module_ctx):
     sdk = _sdk_kwargs(_single_root_tag(module_ctx, "sdk"))
     emulator = _emulator_kwargs(_single_root_tag(module_ctx, "emulator"))
+    cmake = _cmake_kwargs(_single_root_tag(module_ctx, "cmake"))
     system_images = _system_images_kwargs(_root_tags(module_ctx, "system_image"))
-    kwargs = sdk | emulator | system_images
+    kwargs = sdk | emulator | cmake | system_images
     root_module_direct_dev_deps = ["androidsdk"]
 
     sdk_platform_repositories = {}
@@ -143,6 +158,7 @@ android = module_extension(
         ANDROID_SDK_LICENSE_ENV,
     ],
     tag_classes = {
+        "cmake": CMAKE_TAG,
         "emulator": EMULATOR_TAG,
         "ndk": NDK_TAG,
         "sdk": SDK_TAG,
