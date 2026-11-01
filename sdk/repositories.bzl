@@ -836,6 +836,7 @@ def _write_sdk_layout(rctx, emulator):
     shared_root = rctx.path(rctx.attr.shared_root).dirname
     rctx.file("sdk/.root", "")
     rctx.symlink(shared_root.get_child("platforms"), "sdk/platforms")
+    rctx.symlink(shared_root.get_child("licenses"), "sdk/licenses")
     rctx.symlink(rctx.path("build-tools/{}".format(platform)), "sdk/build-tools")
     rctx.symlink(rctx.path("platform-tools/{}".format(platform)), "sdk/platform-tools")
     if emulator:
@@ -965,6 +966,7 @@ def _hermetic_android_sdk_repository_impl(rctx):
     )
 
     _write_platform_package_metadata(rctx, sdk)
+    rctx.file("licenses/android-sdk-license", rctx.read(rctx.attr._sdk_license))
     rctx.file(".sdk-root", "")
     rctx.symlink(Label("@rules_android//rules/android_sdk_repository:helper.bzl"), "helper.bzl")
     rctx.template(
@@ -1004,6 +1006,10 @@ hermetic_android_sdk_repository = repository_rule(
         "platforms_url": attr.string(),
         "system_images": attr.string_list(),
         "version": attr.string(mandatory = True),
+        "_sdk_license": attr.label(
+            default = Label("//sdk:android-sdk-license"),
+            allow_single_file = True,
+        ),
         "_versions_json": attr.label(
             default = Label("//sdk:versions.json"),
             allow_single_file = True,

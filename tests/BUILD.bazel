@@ -3,6 +3,21 @@ load("@rules_python//python:defs.bzl", "py_test")
 load("//tests:action_command_line_test.bzl", "action_command_line_test")
 
 py_test(
+    name = "sdk_license_test",
+    srcs = ["sdk_license_test.py"],
+    args = [
+        "$(rootpath //sdk:android-sdk-license)",
+        "$(rootpath @androidsdk//:licenses)",
+        "$(rootpath @androidsdk//:sdk_root)",
+    ],
+    data = [
+        "//sdk:android-sdk-license",
+        "@androidsdk//:licenses",
+        "@androidsdk//:sdk_root",
+    ],
+)
+
+py_test(
     name = "sdk_versions_sha256_test",
     srcs = ["sdk_versions_sha256_test.py"],
     args = ["$(location //sdk:versions.json)"],
@@ -76,6 +91,7 @@ _SDK_HUB_TARGETS = [
     "generate_main_dex_list",
     "has_androidsdk",
     "legacy_test-35",
+    "licenses",
     "main_dex_list_creator",
     "org_apache_http_legacy",
     "org_apache_http_legacy-35",
