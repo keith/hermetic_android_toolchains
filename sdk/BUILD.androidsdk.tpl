@@ -11,6 +11,17 @@ filegroup(
     srcs = ["sdk/.root"],
 )
 
+# Exposes only the downloaded host tools, excluding generated Bazel runners.
+filegroup(
+    name = "host_tools_files",
+    srcs = glob([
+        "build-tools/**",
+        "emulator/**",
+        "platform-tools/**",
+    ], allow_empty = True),
+    visibility = ["//visibility:public"],
+)
+
 %{platform_rules}
 
 %{platform_aliases}
