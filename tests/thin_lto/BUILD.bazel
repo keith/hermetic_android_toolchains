@@ -1,0 +1,79 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//tests:action_command_line_test.bzl", "thin_lto_action_command_line_test")
+load(":defs.bzl", "thin_lto_artifacts")
+
+thin_lto_artifacts(
+    name = "artifacts",
+    testonly = True,
+    targets = [
+        ":binary",
+        ":libshared.so",
+    ],
+)
+
+# Included in the CI's //... test runs on Linux, macOS, and Windows.
+build_test(
+    name = "thin_lto_build_test",
+    targets = [":artifacts"],
+)
+
+thin_lto_action_command_line_test(
+    name = "compile_test",
+    expected_argv = [
+        "bin/clang",
+        "-flto=thin",
+    ],
+    mnemonic = "CppCompile",
+    target_under_test = ":library",
+)
+
+[thin_lto_action_command_line_test(
+    name = target.replace(".", "_") + "_index_test",
+    expected_argv = [
+        "bin/clang",
+        "-flto=thin",
+        "-Wl,-plugin-opt,thinlto-index-only=",
+        "-Wl,-plugin-opt,thinlto-emit-imports-files",
+    ],
+    mnemonic = "CppLTOIndexing",
+    target_under_test = ":" + target,
+) for target in [
+    "binary",
+    "libshared.so",
+]]
+
+thin_lto_action_command_line_test(
+    name = "backend_test",
+    argv_filter = "main.o",
+    expected_argv = [
+        "bin/clang",
+        "-fthinlto-index=",
+        "-x ir",
+        "--target=x86_64-linux-android",
+    ],
+    mnemonic = "CcLtoBackendCompile",
+    target_under_test = ":binary",
+)
+
+cc_library(
+    name = "library",
+    srcs = ["library.c"],
+    tags = ["manual"],
+)
+
+cc_binary(
+    name = "binary",
+    srcs = ["main.cc"],
+    tags = ["manual"],
+    deps = [":library"],
+)
+
+cc_binary(
+    name = "libshared.so",
+    srcs = ["shared.cc"],
+    linkshared = True,
+    tags = ["manual"],
+    deps = [":library"],
+)

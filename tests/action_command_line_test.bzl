@@ -76,15 +76,28 @@ def _action_command_line_test_impl(ctx):
 
     return analysistest.end(env)
 
+_ATTRS = {
+    "argv_filter": attr.string(),
+    "expected_argv": attr.string_list(),
+    "mnemonic": attr.string(mandatory = True),
+    "not_expected_argv": attr.string_list(),
+}
+
 action_command_line_test = analysistest.make(
     _action_command_line_test_impl,
-    attrs = {
-        "argv_filter": attr.string(),
-        "expected_argv": attr.string_list(),
-        "mnemonic": attr.string(mandatory = True),
-        "not_expected_argv": attr.string_list(),
-    },
+    attrs = _ATTRS,
     config_settings = {
+        # buildifier: disable=canonical-repository
+        "//command_line_option:platforms": "@@rules_android+//:x86_64",
+    },
+)
+
+thin_lto_action_command_line_test = analysistest.make(
+    _action_command_line_test_impl,
+    attrs = _ATTRS,
+    config_settings = {
+        "//command_line_option:compilation_mode": "opt",
+        "//command_line_option:features": ["thin_lto"],
         # buildifier: disable=canonical-repository
         "//command_line_option:platforms": "@@rules_android+//:x86_64",
     },
