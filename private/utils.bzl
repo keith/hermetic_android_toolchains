@@ -9,7 +9,7 @@ ANDROID_PLATFORMS = {
     },
     "linux": {
         "constraints": [
-            ("linux", ["@platforms//os:linux", "@platforms//cpu:x86_64"]),
+            ("linux", ["@platforms//os:linux"]),
         ],
         "executable_extension": "",
     },
